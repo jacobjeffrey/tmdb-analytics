@@ -8,6 +8,12 @@ sentiment analysis, to further improve predictions
 **The Movie Database (https://www.themoviedb.org/)**
 - free API
 - movies endpoint: adult (boolean), budget,  revenue, keywords, production companies, release_date, tagline
+- pulled in movies from 2000 to 2024, vote_count > 10
+- pulled in genres
+- the popular list for people pulls in too many pages, need to figure out how to pull them in with movie data, may need to learn caching
+
+** Letterboxd **
+- need to check if scrape friendly
 
 things i've learned:
 - how to pull info from APIs using requests

@@ -10,7 +10,7 @@ load_dotenv()
 
 current_file = Path(__file__).resolve()
 project_root = current_file.parents[1]
-data_path = project_root / 'data' / 'movies.csv'
+data_path = project_root / "data" / "movies.csv"
 
 api_key = os.getenv("TMDB_API_KEY")
 url = "https://api.themoviedb.org/3/discover/movie"
@@ -39,11 +39,11 @@ for start, end in year_ranges:
         response.raise_for_status()
         data = response.json()
 
-        if not data.get('results'):
+        if not data.get("results"):
             print(f"Last page was {page-1}")
             break
         else:
-            movies = response.json()['results']
+            movies = response.json()["results"]
             movies_data.extend(movies)
             time.sleep(.05)
 
