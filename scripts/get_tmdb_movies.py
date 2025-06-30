@@ -38,14 +38,9 @@ for start, end in year_ranges:
         response = session.get(url, params=params)
         response.raise_for_status()
         data = response.json()
-
-        if not data.get("results"):
-            print(f"Last page was {page-1}")
-            break
-        else:
-            movies = response.json()["results"]
-            movies_data.extend(movies)
-            time.sleep(.05)
+        movies = response.json()["results"]
+        movies_data.extend(movies)
+        time.sleep(.05)
 
     time.sleep(.50)
 
