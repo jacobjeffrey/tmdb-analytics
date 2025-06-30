@@ -11,6 +11,7 @@ load_dotenv()
 current_file = Path(__file__).resolve()
 project_root = current_file.parents[1]
 data_path = project_root / "data" / "people.csv"
+os.makedirs(os.path.dirname(data_path), exist_ok=True) # ensure path exists
 
 api_key = os.getenv("TMDB_API_KEY")
 url = "https://api.themoviedb.org/3/person/popular"

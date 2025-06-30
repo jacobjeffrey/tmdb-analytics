@@ -11,6 +11,7 @@ load_dotenv()
 current_file = Path(__file__).resolve()
 project_root = current_file.parents[1]
 data_path = project_root / "data" / "movies.csv"
+os.makedirs(os.path.dirname(data_path), exist_ok=True) # ensure path exists
 
 api_key = os.getenv("TMDB_API_KEY")
 url = "https://api.themoviedb.org/3/discover/movie"
@@ -33,12 +34,22 @@ for start, end in year_ranges:
         "vote_count.gte": 10 # filter out low quality and obscure results
     }
 
+    
     for page in range(1, 501):
         params["page"] = page
         response = session.get(url, params=params)
         response.raise_for_status()
-        data = response.json()
-        movies = response.json()["results"]
+
+        try:
+            data = response.json()
+        except ValueError:
+            print(f"Invalid JSON on page {page} for range {start} to {end}")
+            break
+        
+        if not data.get("results"):
+            break
+        
+        movies = data["results"]
         movies_data.extend(movies)
         time.sleep(.05)
 
