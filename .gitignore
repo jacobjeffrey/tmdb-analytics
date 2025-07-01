@@ -2,3 +2,4 @@ data/
 models/
 .venv
 .env
+notebooks/.ipynb_checkpoints/

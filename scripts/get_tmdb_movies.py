@@ -1,5 +1,6 @@
 import os
 import time
+import json
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -24,6 +25,11 @@ end_year = 2024
 
 year_ranges = [(f"{year}-01-01", f"{year}-12-31") for year in range(start_year, end_year+1)]
     
+# this formula removes any unusual unicode seperators
+def clean_text(text):
+    text = text.replace(u"\u2028", " ")
+    return text.replace(u"\u2029", " ")
+
 # get movie data
 for start, end in year_ranges:
     print(f"Fetching movies for year starting {start}")
@@ -50,10 +56,18 @@ for start, end in year_ranges:
             break
         
         movies = data["results"]
+        # clean the data
+        for movie in movies:
+            for key, value in movie.items(): 
+                if (isinstance(value,(list, dict))): # deserialize lists
+                    movie[key] = json.dumps(value)
+                elif (isinstance(value, str)):
+                    movie[key] = clean_text(value)
+
         movies_data.extend(movies)
         time.sleep(.05)
 
-    time.sleep(.50)
+    time.sleep(.10)
 
 df = pandas.DataFrame(movies_data)
 df.to_csv(data_path, index=False)
