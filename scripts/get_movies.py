@@ -5,7 +5,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 import requests
-import pandas
+import pandas as pd
 
 load_dotenv()
 
@@ -59,7 +59,7 @@ for start, end in year_ranges:
         # clean the data
         for movie in movies:
             for key, value in movie.items(): 
-                if (isinstance(value,(list, dict))): # deserialize lists
+                if (isinstance(value,(list, dict))): # serialize lists/dicts
                     movie[key] = json.dumps(value)
                 elif (isinstance(value, str)):
                     movie[key] = clean_text(value)
@@ -69,5 +69,5 @@ for start, end in year_ranges:
 
     time.sleep(.10)
 
-df = pandas.DataFrame(movies_data)
+df = pd.DataFrame(movies_data)
 df.to_csv(data_path, index=False)
