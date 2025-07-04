@@ -42,6 +42,7 @@ for id in movie_ids:
             if isinstance(value, (list, dict)):
                 data[key] = json.dumps(value)
         
+        movie_details.append(data)
         time.sleep(.0333)
     except requests.exceptions.HTTPError as err:
         print(f"HTTP error: {err} for movie_id {id}")
