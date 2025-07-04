@@ -12,9 +12,17 @@ load_dotenv()
 current_file = Path(__file__).resolve()
 project_root = current_file.parents[1]
 data_path = project_root / "data" / "movie_details.csv"
+os.makedirs(os.path.dirname(data_path), exist_ok=True) # ensure path exists
+
 # the movies.csv file needs to exist for this script to work
 movies_path = project_root / "data" / "movies.csv"
-os.makedirs(os.path.dirname(data_path), exist_ok=True) # ensure path exists
+try:
+    df_movies = pd.read_csv(movies_path, engine="python")
+    movie_ids = df_movies["id"]
+except:
+    print("Error, you must run get movies.csv before running this script.")
+    print("Run get_moves.py")
+
 
 api_key = os.getenv("TMDB_API_KEY")
 BASE_URL = "https://api.themoviedb.org/3/movie/"
@@ -24,10 +32,6 @@ movie_details = []
 params = {
     "api_key": api_key
 }
-
-# get the movie ids
-df_movies = pd.read_csv(movies_path, engine="python")
-movie_ids = df_movies["id"]
 
 # get movie data
 for id in movie_ids:
@@ -44,8 +48,10 @@ for id in movie_ids:
         
         movie_details.append(data)
         time.sleep(.0333)
+
     except requests.exceptions.HTTPError as err:
         print(f"HTTP error: {err} for movie_id {id}")
+        
     except Exception as e:
         print(f"Other error: {e}")
 
