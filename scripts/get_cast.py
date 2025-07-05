@@ -11,7 +11,7 @@ load_dotenv()
 ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = ROOT / "data"
 MOVIES_CSV = DATA_DIR / "movies.csv"
-BASE_URL = "https://api.themoviedb.org/3/movie/{movie_id}/credits"
+BASE_URL = "https://api.themoviedb.org/3/movie/{}/credits"
 API_KEY = os.getenv("TMDB_API_KEY")
 
 DATA_DIR.mkdir(parents=True, exist_ok=True) # ensure directory exists
@@ -30,9 +30,9 @@ params = {
 
 cast_data = []
 # get cast data
-for id in movie_ids:
+for movie_id in movie_ids:
     try:
-        url = f"{BASE_URL.format(id)}"
+        url = BASE_URL.format(movie_id)
         response = session.get(url, params=params)
         response.raise_for_status()
         data = response.json().get("cast")
@@ -40,12 +40,13 @@ for id in movie_ids:
         for cast in data:
             # filter low popularity cast, guarante to keep first 5
             if cast.get("popularity") >.5 or cast.get("order") < 5:
+                cast["movie_id"] = movie_id
                 cast_data.append(cast)
 
         time.sleep(.0333)
 
     except requests.exceptions.HTTPError as err:
-        print(f"HTTP error: {err} for movie_id {id}")
+        print(f"HTTP error: {err} for movie_id {movie_id}")
         
     except Exception as e:
         print(f"Other error: {e}")
