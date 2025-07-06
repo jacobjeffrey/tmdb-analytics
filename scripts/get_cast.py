@@ -11,6 +11,7 @@ load_dotenv()
 ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = ROOT / "data"
 MOVIES_CSV = DATA_DIR / "movies.csv"
+CAST_CSV = DATA_DIR / "cast.csv"
 BASE_URL = "https://api.themoviedb.org/3/movie/{}/credits"
 API_KEY = os.getenv("TMDB_API_KEY")
 
@@ -19,9 +20,24 @@ DATA_DIR.mkdir(parents=True, exist_ok=True) # ensure directory exists
 # the movies.csv file needs to exist for this script to work
 try:
     df_movies = pd.read_csv(MOVIES_CSV, engine="python")
-    movie_ids = df_movies["id"]
+    movie_ids = set(df_movies["id"])
 except Exception:
     print("Error: you must run get_movies.py to create 'movies.csv'")
+    exit(1)
+
+# check if cast.csv exists
+if CAST_CSV.exists():
+    overwrite = input("cast.csv exists, overwrite? (y/n) ")
+    if overwrite.lower() == 'y':
+        write_mode = 'w'
+    else:
+        write_mode = 'a'
+        df_cast = pd.read_csv(CAST_CSV)
+        movies_seen = set(df_cast["movie_id"])
+        movie_ids = movie_ids.difference(movies_seen)
+else:
+    write_mode = 'w'
+header = (write_mode == 'w')
 
 session = requests.Session()
 params = {
@@ -30,7 +46,7 @@ params = {
 
 cast_data = []
 # get cast data
-for movie_id in movie_ids:
+for i, movie_id in enumerate(movie_ids):
     try:
         url = BASE_URL.format(movie_id)
         response = session.get(url, params=params)
@@ -39,7 +55,7 @@ for movie_id in movie_ids:
 
         for cast in data:
             # filter low popularity cast, guarante to keep first 5
-            if cast.get("popularity") >.5 or cast.get("order") < 5:
+            if cast.get("popularity",0) >.5 or cast.get("order",1000) < 5:
                 cast["movie_id"] = movie_id
                 cast_data.append(cast)
 
@@ -50,8 +66,9 @@ for movie_id in movie_ids:
         
     except Exception as e:
         print(f"Other error: {e}")
-
-
-
-df = pd.DataFrame(cast_data)
-df.to_csv(DATA_DIR / "cast.csv", index=False)
+    if cast_data and (i % 1000 == 0 or i + 1 == len(movie_ids)):
+        df = pd.DataFrame(cast_data)
+        df.to_csv(CAST_CSV, mode = write_mode, index=False, header=header)
+        cast_data = []
+        write_mode = "a"
+        header=False
