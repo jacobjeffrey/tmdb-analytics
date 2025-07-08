@@ -4,7 +4,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 import requests
-import pandas
+import pandas as pd
 
 load_dotenv()
 
@@ -28,5 +28,5 @@ data = response.json()
 genres = response.json()["genres"]
 
 # write to csv
-df = pandas.DataFrame(genres)
+df = pd.DataFrame(genres)
 df.to_csv(data_path, index=False)
