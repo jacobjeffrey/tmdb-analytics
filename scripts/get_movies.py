@@ -2,6 +2,7 @@ import os
 import time
 import json
 from pathlib import Path
+import csv
 
 from dotenv import load_dotenv
 import requests
@@ -70,4 +71,4 @@ for start, end in year_ranges:
     time.sleep(.10)
 
 df = pd.DataFrame(movies_data)
-df.to_csv(data_path, index=False)
+df.to_csv(data_path, index=False, quoting=csv.QUOTE_ALL)
