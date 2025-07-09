@@ -2,10 +2,14 @@ import os
 import time
 from pathlib import Path
 import json
+import csv
 
 from dotenv import load_dotenv
 import requests
 import pandas as pd
+import aiohttp
+import asyncio
+from aiolimiter import AsyncLimiter
 
 load_dotenv()
 
@@ -26,36 +30,33 @@ except:
 
 api_key = os.getenv("TMDB_API_KEY")
 BASE_URL = "https://api.themoviedb.org/3/movie/"
-session = requests.Session()
-movie_details = []
-
 params = {
     "api_key": api_key
 }
 
-# get movie data
-for id in movie_ids:
-    try:
-        url = f"{BASE_URL}{id}"
-        response = session.get(url, params=params)
-        response.raise_for_status()
-        data = response.json()
+limiter = AsyncLimiter(max_rate=35, time_period=1)
 
-        # serialize data
-        for key, value in data.items():
-            if isinstance(value, (list, dict)):
-                data[key] = json.dumps(value)
-        
-        movie_details.append(data)
-        time.sleep(.0333)
+async def fetch_movie_details(session, movie_id):
+    url = f"{BASE_URL}{movie_id}"
+    async with limiter:
+        async with session.get(url, params=params) as response:
+            try:
+                response.raise_for_status()
+                data = await response.json()
+                for key, value in data.items():
+                    if isinstance(value, (list, dict)):
+                        data[key] = json.dumps(value)
+            except aiohttp.ClientResponseError as e:
+                raise
+    return data
 
-    except requests.exceptions.HTTPError as err:
-        print(f"HTTP error: {err} for movie_id {id}")
-        
-    except Exception as e:
-        print(f"Other error: {e}")
+async def collect_movie_details():
+    async with aiohttp.ClientSession() as session:
+        movie_details = [fetch_movie_details(session, movie_id) for movie_id in movie_ids]
+        results = await asyncio.gather(*movie_details)
+    return results
 
-
+movie_details = asyncio.run(collect_movie_details())
 
 df = pd.DataFrame(movie_details)
-df.to_csv(data_path, index=False)
+df.to_csv(data_path, index=False, quoting=csv.QUOTE_ALL)
