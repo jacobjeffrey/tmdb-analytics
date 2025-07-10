@@ -5,7 +5,6 @@ import json
 import csv
 
 from dotenv import load_dotenv
-import requests
 import pandas as pd
 import aiohttp
 import asyncio
@@ -25,7 +24,7 @@ try:
     movie_ids = df_movies["id"]
 except:
     print("Error, you must run get movies.csv before running this script.")
-    print("Run get_moves.py")
+    exit(1)
 
 
 api_key = os.getenv("TMDB_API_KEY")
@@ -34,20 +33,24 @@ params = {
     "api_key": api_key
 }
 
-limiter = AsyncLimiter(max_rate=35, time_period=1)
+# asynchronous session options
+limiter = AsyncLimiter(max_rate=30, time_period=1)
+semaphore = asyncio.Semaphore(10)
 
 async def fetch_movie_details(session, movie_id):
     url = f"{BASE_URL}{movie_id}"
-    async with limiter:
-        async with session.get(url, params=params) as response:
-            try:
-                response.raise_for_status()
-                data = await response.json()
-                for key, value in data.items():
-                    if isinstance(value, (list, dict)):
-                        data[key] = json.dumps(value)
-            except aiohttp.ClientResponseError as e:
-                raise
+    async with semaphore:
+        async with limiter:
+            async with session.get(url, params=params) as response:
+                try:
+                    response.raise_for_status()
+                    data = await response.json()
+                    for key, value in data.items():
+                        if isinstance(value, (list, dict)):
+                            data[key] = json.dumps(value)
+                    print(f"Fetched movie {movie_id} at {time.strftime('%H:%M:%S.%f')[:-3]}")
+                except aiohttp.ClientResponseError as e:
+                    raise
     return data
 
 async def collect_movie_details():
@@ -57,6 +60,7 @@ async def collect_movie_details():
     return results
 
 movie_details = asyncio.run(collect_movie_details())
+movie_details = [d for d in movie_details if d is not None]
 
 df = pd.DataFrame(movie_details)
 df.to_csv(data_path, index=False, quoting=csv.QUOTE_ALL)
