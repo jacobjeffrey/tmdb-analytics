@@ -31,7 +31,7 @@ except:
 
 # check if movie_details.csv exists
 if MOVIE_DETAILS_CSV.exists():
-    overwrite = input("cast.csv exists, overwrite? (y/n) ")
+    overwrite = input("movie_details.csv exists, overwrite? (y/n) ")
     if overwrite.lower() == 'y':
         write_mode = 'w'
         movies_to_fetch = all_movie_ids
@@ -84,7 +84,6 @@ async def fetch_movie_details(session, movie_id):
                     for key, value in data.items():
                         if isinstance(value, (list, dict)):
                             data[key] = json.dumps(value)
-                    print(f"Fetched movie {movie_id} at {time.strftime('%H:%M:%S.%f')[:-3]}")
                 except aiohttp.ClientResponseError as e:
                     raise
     return data
@@ -104,4 +103,5 @@ async def collect_movie_details():
             write_mode = "a"
             local_header=False
         
-
+if __name__ == "__main__":
+    asyncio.run(collect_movie_details())
