@@ -21,3 +21,7 @@ I may come back to the ML ideas at a future time.
 - APIs often have a page limit, need to cap that
 - Use data = session.get(), data.get('key') to check if a key exists
 - Trying to parse the .json as is can lead to issues if one of the fields consists of lists or dicts.
+
+# Database setup
+With the data files now downloaded, I will perform a quick EDA to check out if there's missing values, duplicates, etc.
+Once that's done, I will start the schema and database creation with dbt
