@@ -50,7 +50,7 @@ def resolve_write_mode(filepath, id_name, all_ids):
             ids_to_fetch = list(set(all_ids) - set(ids_seen))
             print(f"Currently have {len(ids_seen)} entries fetched, will fetch {len(ids_to_fetch)}")
     else:
-        write_mode = 'a'
+        write_mode = 'w'
         ids_to_fetch = list(all_ids)
         print(f"Fetching {len(ids_to_fetch)} entries")
         
