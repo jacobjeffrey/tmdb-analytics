@@ -27,9 +27,9 @@ except:
 
 # check if movie_details.csv exists and if should overwrite or append
 options = resolve_write_mode(MOVIE_DETAILS_CSV, "id", all_movie_ids)
-write_mode = options["write_mode"]
+initial_write_mode = options["write_mode"]
 ids_to_fetch = options["ids_to_fetch"]
-header = options["header"]
+initial_header = options["header"]
 
 # prepare API url and parameters
 api_key = get_api_key()
@@ -43,12 +43,11 @@ limiter = AsyncLimiter(max_rate=30, time_period=1)
 semaphore = asyncio.Semaphore(10)
 
 async def collect_movie_details():
-    write_mode = "w" if header else "a"  # ensure local scope
-    local_header = header  # avoid mutation confusion
+    write_mode = "w" if initial_header else "a"
+    local_header = initial_header 
 
     async with aiohttp.ClientSession() as session:
         for i, batch in enumerate(chunked(ids_to_fetch, BATCH_SIZE)):
-            print(f"Fetching batch {i} of length {len(batch)}")
             tasks = []
             for id in batch:
                 url = BASE_URL + str(id)

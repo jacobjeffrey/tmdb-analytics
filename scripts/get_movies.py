@@ -10,14 +10,14 @@ import aiohttp
 import asyncio
 from aiolimiter import AsyncLimiter
 
-from utils import get_api_key, get_root_dir, ensure_path_exists, resolve_write_mode, chunked, fetch_api_data
+from utils import get_api_key, get_root_dir, ensure_path_exists, resolve_write_mode, chunked, fetch_api_data, serialize_json
 
 load_dotenv()
 
 PROJECT_ROOT = get_root_dir()
 DATA_DIR = PROJECT_ROOT / "data"
 MOVIES_CSV = DATA_DIR / "movies.csv"
-API_KEY = get_api_key
+API_KEY = get_api_key()
 BASE_URL = "https://api.themoviedb.org/3/discover/movie"
 
 ensure_path_exists(DATA_DIR) # ensure data directory exists
@@ -45,16 +45,19 @@ async def collect_movies():
                 "vote_count.gte": 10 # filter out low quality and obscure results
             }
 
-            first_page_data = await fetch_api_data(BASE_URL, session, params, semaphore, limiter)
+            first_page_data = await fetch_api_data(BASE_URL, session, params, semaphore, limiter, serialize=False)
             max_pages = min(first_page_data.get("total_pages"), 500)
             tasks = []
             for page in range(1, max_pages + 1):
-                params["page"] = page
-                tasks.append(fetch_api_data(BASE_URL, session, params, semaphore, limiter))
+                page_params = params.copy()
+                page_params["page"] = page
+                tasks.append(fetch_api_data(BASE_URL, session, page_params, semaphore, limiter, serialize=False))
             
-            results = asyncio.gather(tasks)
-            for movie in results["results"]:
-                movies_data.extend(movie)
-
+            pages = await asyncio.gather(*tasks)
+            for page in pages:
+                for movie in page["results"]:
+                    movies_data.append(serialize_json(movie))
+                    
+asyncio.run(collect_movies())
 df = pd.DataFrame(movies_data)
 df.to_csv(MOVIES_CSV, index=False, quoting=csv.QUOTE_ALL)

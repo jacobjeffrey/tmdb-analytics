@@ -28,10 +28,9 @@ except:
 
 # check if cast.csv exists and if should overwrite or append
 options = resolve_write_mode(CAST_CSV, "movie_id", all_movie_ids)
-write_mode = options["write_mode"]
+initial_write_mode = options["write_mode"]
 ids_to_fetch = options["ids_to_fetch"]
-header = options["header"]
-header = (write_mode == 'w')
+initial_header = options["header"]
 
 params = {
     "api_key": API_KEY
@@ -49,8 +48,8 @@ async def fetch_with_id(url, session, params, semaphore, limiter, movie_id,):
 
 # get cast data
 async def collect_cast():
-    write_mode = "w" if header else "a"  # ensure local scope
-    local_header = header  # avoid mutation confusion
+    write_mode = initial_write_mode
+    local_header = initial_header
 
     async with aiohttp.ClientSession() as session:
         for batch in chunked(ids_to_fetch, BATCH_SIZE):
