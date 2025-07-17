@@ -43,14 +43,17 @@ def resolve_write_mode(filepath, id_name, all_ids):
         if user_response.lower() == 'y':
             write_mode = 'w'
             ids_to_fetch = list(all_ids)
+            print(f"Fetching {len(ids_to_fetch)} entries")
         else:
             write_mode = 'a'
             ids_seen = pd.read_csv(filepath)[id_name]
             ids_to_fetch = list(set(all_ids) - set(ids_seen))
+            print(f"Currently have {len(ids_seen)} entries fetched, will fetch {len(ids_to_fetch)}")
     else:
         write_mode = 'a'
         ids_to_fetch = list(all_ids)
-    
+        print(f"Fetching {len(ids_to_fetch)} entries")
+        
     header = (write_mode == 'w')
 
     return {
@@ -68,20 +71,26 @@ def notify_before_retry(retry_state):
         retry=retry_if_exception_type((aiohttp.ClientError, asyncio.TimeoutError)),
         before_sleep = notify_before_retry
 )
-
 def serialize_json(data):
     for k,v in data.items():
         if isinstance(v, (list, dict)):
             data[k] = json.dumps(v)
     return data
     
-async def fetch_api_data(url, session, params, semaphore, limiter):
+async def fetch_api_data(url, session, params, semaphore, limiter, serialize=True):
     async with semaphore:
         async with limiter:
             async with session.get(url, params=params) as response:
                 try:
                     response.raise_for_status()
-                    data = await response.json()
-                    return serialize_json(data)
+                    try:
+                        data = await response.json()
+                        if serialize:
+                            return serialize_json(data)
+                        else:
+                            return data
+                    except Exception as err:
+                        print(f"Could not fetch data for {url} with params {params}: {err}")
+                        return None
                 except aiohttp.ClientResponseError as e:
                     print(f"Script failed for {url} with params {params}")

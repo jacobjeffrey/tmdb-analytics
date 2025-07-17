@@ -10,16 +10,17 @@ from utils import get_api_key, get_root_dir, ensure_path_exists, resolve_write_m
 
 load_dotenv()
 
-project_root = get_root_dir()
-DATA_PATH = project_root / "data"
-ensure_path_exists(DATA_PATH)
-MOVIE_DETAILS_CSV = DATA_PATH / "movie_details.csv"
-movies_path = DATA_PATH / "movies.csv"
+PROJECT_ROOT = get_root_dir()
+DATA_DIR = PROJECT_ROOT / "data"
+MOVIE_DETAILS_CSV = DATA_DIR / "movie_details.csv"
+MOVIES_CSV = DATA_DIR / "movies.csv"
 BATCH_SIZE = 500 # how many ids to process before writing to csv
+BASE_URL = "https://api.themoviedb.org/3/movie/"
 
+ensure_path_exists(DATA_DIR)
 # the movies.csv file needs to exist for this script to work
 try:
-    df_movies = pd.read_csv(movies_path, engine="python")
+    df_movies = pd.read_csv(MOVIES_CSV, engine="python")
     all_movie_ids = df_movies["id"]
 except:
     raise FileNotFoundError("You must run get_movies.py before running this script")
@@ -32,7 +33,7 @@ header = options["header"]
 
 # prepare API url and parameters
 api_key = get_api_key()
-BASE_URL = "https://api.themoviedb.org/3/movie/"
+
 params = {
     "api_key": api_key
 }
