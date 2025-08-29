@@ -24,7 +24,7 @@ ensure_path_exists(DATA_DIR) # ensure data directory exists
 
 # because TMDB caps pagination at 500, we need to pull data for each year individually
 start_year = 2000
-end_year = 2024
+end_year = 2025
 
 year_ranges = [(f"{year}-01-01", f"{year}-12-31") for year in range(start_year, end_year+1)]
 movies_data = []
@@ -55,8 +55,10 @@ async def collect_movies():
             
             pages = await asyncio.gather(*tasks)
             for page in pages:
-                for movie in page["results"]:
-                    movies_data.append(serialize_json(movie))
+                page_results = page.get("results")
+                if page_results:
+                    for movie in page_results:
+                        movies_data.append(serialize_json(movie))
                     
 asyncio.run(collect_movies())
 df = pd.DataFrame(movies_data)
