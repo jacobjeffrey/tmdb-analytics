@@ -6,6 +6,8 @@ PROJECT_ROOT = get_root_dir()
 DATA_DIR = PROJECT_ROOT / "data"
 MOVIES_CSV = DATA_DIR / "movies.csv"
 MOVIE_DETAILS_CSV = DATA_DIR / "movie_details.csv"
+CAST_CSV = DATA_DIR / "cast.csv"
+GENRES_CSV = DATA_DIR / "genres.csv"
 
 conn = psycopg2.connect(database="tmdb",
                         user="tmdb",
@@ -154,5 +156,95 @@ with open(MOVIE_DETAILS_CSV) as file:
         file
     )
 print("raw.movie_details created successfully")
+conn.commit()
 
+# create raw.table
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS raw.cast_members (
+    adult TEXT,
+    gender TEXT,
+    id TEXT,
+    known_for_department TEXT,
+    name TEXT,
+    original_name TEXT,
+    popularity TEXT,
+    profile_path TEXT,
+    cast_id TEXT,
+    character TEXT,
+    credit_id TEXT,
+    cast_order TEXT,
+    movie_id TEXT
+    )
+    """
+)
+conn.commit()
+
+with open(CAST_CSV) as file:
+    cur.execute("TRUNCATE raw.cast_members")
+    cur.copy_expert(
+        """
+        COPY raw.cast_members (
+            adult, 
+            gender,
+            id,
+            known_for_department,
+            name,
+            original_name,
+            popularity,
+            profile_path,
+            cast_id,
+            character,
+            credit_id,
+            cast_order,
+            movie_id
+        )
+        FROM STDIN
+        WITH (
+            FORMAT csv,
+            HEADER TRUE,
+            QUOTE '"',
+            ESCAPE '"',
+            NULL ''
+        )
+        """,
+        file
+    )
+
+print("raw.cast_members created successfully")
+conn.commit()
+
+# create genres table
+cur.execute(
+    """
+    CREATE TABLE IF NOT EXISTS raw.genres (
+    id TEXT,
+    name TEXT
+    )
+    """
+)
+conn.commit()
+
+with open(GENRES_CSV) as file:
+    cur.execute("TRUNCATE raw.genres")
+    cur.copy_expert(
+        """
+        COPY raw.genres (
+            id,
+            name
+        )
+        FROM STDIN
+        WITH (
+            FORMAT csv,
+            HEADER TRUE,
+            QUOTE '"',
+            ESCAPE '"',
+            NULL ''
+        )
+        """,
+        file
+    )
+
+print("raw.genres created successfully")
+conn.commit()
 conn.close()
