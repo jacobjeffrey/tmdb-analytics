@@ -1,0 +1,13 @@
+# models/staging/sources.yml
+
+version: 2
+
+sources:
+  - name: raw  # This matches the first argument in source()
+    description: "Raw data from the application database."
+    database: tmdb # The actual database name
+    schema: raw       # The actual schema name
+    tables:
+      - name: movies
+      - name: movie_genres # This matches the second argument in source()
+      - name: genres

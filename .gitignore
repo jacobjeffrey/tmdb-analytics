@@ -1,5 +1,4 @@
 data/
-models/
 logs/
 .venv
 .env
