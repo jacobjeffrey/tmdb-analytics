@@ -1,16 +1,17 @@
-select
-    cast(adult as boolean) as adult,
-    backdrop_path,
-    cast(genre_ids as jsonb) as genre_ids,
-    cast(id as bigint) as movie_id,
-    original_language,
-    overview,
-    cast(popularity as numeric(10,2)) as popularity,
-    poster_path,
-    cast(release_date as date) as release_date,
-    title,
-    cast(video as boolean) as video,
-    cast(vote_average as numeric(3,1)) as vote_average,
-    cast(vote_count as bigint) as vote_count
-from
-    {{source('raw', 'movies')}}
+-- models/staging/stg_movies.sql
+SELECT
+    NULLIF(adult, '')::boolean                 as adult,
+    NULLIF(backdrop_path, '')                  as backdrop_path,
+    NULLIF(genre_ids, '')::jsonb               as genre_ids,
+    NULLIF(id, '')::bigint                     as movie_id,
+    LOWER(NULLIF(original_language, ''))       as original_language,
+    NULLIF(overview, '')                       as overview,
+    NULLIF(popularity, '')::numeric(12,6)      as popularity,
+    NULLIF(poster_path, '')                    as poster_path,
+    NULLIF(release_date, '')::date             as release_date,
+    NULLIF(title, '')                          as title,
+    NULLIF(video, '')::boolean                 as video,
+    NULLIF(vote_average, '')::numeric(4,2)     as vote_average,
+    NULLIF(vote_count, '')::bigint             as vote_count
+FROM
+    {{ source('raw', 'movies') }};
