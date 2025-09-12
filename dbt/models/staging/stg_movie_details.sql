@@ -27,4 +27,4 @@ SELECT
   NULLIF(video, '')::boolean                         AS is_video,
   NULLIF(vote_average, '')::numeric(4,2)             AS vote_average,
   NULLIF(vote_count, '')::integer                    AS vote_count
-FROM {{ source('tmdb','movies_raw') }};
+FROM {{ source('raw','movie_details') }}

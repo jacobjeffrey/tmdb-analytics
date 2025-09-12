@@ -159,6 +159,8 @@ print("raw.movie_details created successfully")
 conn.commit()
 
 # create raw.table
+cur.execute("DROP TABLE IF EXISTS raw.cast_members;")
+conn.commit()
 cur.execute(
     """
     CREATE TABLE IF NOT EXISTS raw.cast_members (
@@ -173,7 +175,7 @@ cur.execute(
     cast_id TEXT,
     character TEXT,
     credit_id TEXT,
-    cast_order TEXT,
+    "order" TEXT,
     movie_id TEXT
     )
     """
@@ -196,7 +198,7 @@ with open(CAST_CSV) as file:
             cast_id,
             character,
             credit_id,
-            cast_order,
+            "order",
             movie_id
         )
         FROM STDIN

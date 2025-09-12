@@ -14,4 +14,4 @@ SELECT
     NULLIF(vote_average, '')::numeric(4,2)     as vote_average,
     NULLIF(vote_count, '')::bigint             as vote_count
 FROM
-    {{ source('raw', 'movies') }};
+    {{ source('raw', 'movies') }}

@@ -14,4 +14,4 @@ select
     NULLIF("order", '')::int                 as cast_order,
     NULLIF(movie_id, '')::bigint             as movie_id
 from
-    {{ source('raw', 'cast') }};
+    {{ source('raw', 'cast_members') }}
