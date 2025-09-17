@@ -16,34 +16,7 @@ conn = psycopg2.connect(database="tmdb",
                         port=5432)
 cur = conn.cursor()
 
-# create raw, stg, mart schemas
-cur.execute("CREATE SCHEMA IF NOT EXISTS raw")
-cur.execute("CREATE SCHEMA IF NOT EXISTS stg")
-cur.execute("CREATE SCHEMA IF NOT EXISTS int")
-cur.execute("CREATE SCHEMA IF NOT EXISTS mart")
-
-# create movies table
-cur.execute(
-    """
-    CREATE TABLE IF NOT EXISTS raw.movies (
-    adult TEXT,
-    backdrop_path TEXT,
-    genre_ids TEXT,
-    id TEXT,
-    original_language TEXT,
-    original_title TEXT,
-    overview TEXT,
-    popularity TEXT,
-    poster_path TEXT,
-    release_date TEXT,
-    title TEXT,
-    video TEXT,
-    vote_average TEXT,
-    vote_count TEXT
-    )
-    """)
-conn.commit()
-
+# update movies table
 with open(MOVIES_CSV) as file:
     cur.execute("TRUNCATE raw.movies")
     cur.copy_expert(
@@ -77,43 +50,9 @@ with open(MOVIES_CSV) as file:
     )
 
 conn.commit()
-print("raw.movies created successfully")
+print("raw.movies updated successfully")
 
-# create movie_details
-cur.execute(
-    """
-    CREATE TABLE IF NOT EXISTS raw.movie_details (
-    adult TEXT,
-    backdrop_path TEXT,
-    belongs_to_collection TEXT,
-    budget TEXT,
-    genres TEXT,
-    homepage TEXT,
-    id TEXT,
-    imdb_id TEXT,
-    origin_country TEXT,
-    original_language TEXT,
-    original_title TEXT,
-    overview TEXT,
-    popularity TEXT,
-    poster_path TEXT,
-    production_companies TEXT,
-    production_countries TEXT,
-    release_date TEXT,
-    revenue TEXT,
-    runtime TEXT,
-    spoken_languages TEXT,
-    status TEXT,
-    tagline TEXT,
-    title TEXT,
-    video TEXT,
-    vote_average TEXT,
-    vote_count TEXT
-    )
-    """
-)
-conn.commit()
-
+# update movie_details table
 with open(MOVIE_DETAILS_CSV) as file:
     cur.execute("TRUNCATE raw.movie_details")
     cur.copy_expert(
@@ -156,33 +95,10 @@ with open(MOVIE_DETAILS_CSV) as file:
         """,
         file
     )
-print("raw.movie_details created successfully")
+print("raw.movie_details updated successfully")
 conn.commit()
 
-# create raw.table
-cur.execute("DROP TABLE IF EXISTS raw.cast_members;")
-conn.commit()
-cur.execute(
-    """
-    CREATE TABLE IF NOT EXISTS raw.cast_members (
-    adult TEXT,
-    gender TEXT,
-    id TEXT,
-    known_for_department TEXT,
-    name TEXT,
-    original_name TEXT,
-    popularity TEXT,
-    profile_path TEXT,
-    cast_id TEXT,
-    character TEXT,
-    credit_id TEXT,
-    "order" TEXT,
-    movie_id TEXT
-    )
-    """
-)
-conn.commit()
-
+# update cast_members table
 with open(CAST_CSV) as file:
     cur.execute("TRUNCATE raw.cast_members")
     cur.copy_expert(
@@ -214,18 +130,7 @@ with open(CAST_CSV) as file:
         file
     )
 
-print("raw.cast_members created successfully")
-conn.commit()
-
-# create genres table
-cur.execute(
-    """
-    CREATE TABLE IF NOT EXISTS raw.genres (
-    id TEXT,
-    name TEXT
-    )
-    """
-)
+print("raw.cast_members updated successfully")
 conn.commit()
 
 with open(GENRES_CSV) as file:
@@ -248,6 +153,6 @@ with open(GENRES_CSV) as file:
         file
     )
 
-print("raw.genres created successfully")
+print("raw.genres updated successfully")
 conn.commit()
 conn.close()
