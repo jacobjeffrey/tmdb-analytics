@@ -11,3 +11,5 @@ sources:
       - name: movie_details
       - name: genres
       - name: cast_members
+      - name: countries
+      - name: languages

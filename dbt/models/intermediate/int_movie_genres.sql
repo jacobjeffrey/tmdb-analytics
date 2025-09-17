@@ -1,4 +1,4 @@
--- models/intermediate/movies_genres.sql
+-- models/intermediate/movie_genres.sql
 with base as (
     select * from {{ ref('stg_movies') }}
 )

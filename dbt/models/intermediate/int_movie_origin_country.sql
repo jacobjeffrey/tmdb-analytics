@@ -1,4 +1,4 @@
--- models/intermediate/movies_origin_country.sql
+-- models/intermediate/movie_origin_country.sql
 with base as (
     select 
         movie_id, origin_country 

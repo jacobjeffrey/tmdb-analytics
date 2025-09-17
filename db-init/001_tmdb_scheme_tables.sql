@@ -71,3 +71,15 @@ CREATE TABLE IF NOT EXISTS raw.genres (
     id TEXT,
     name TEXT
 );
+
+CREATE TABLE IF NOT EXISTS raw.countries (
+    iso_3166_1 TEXT,
+    english_name TEXT,
+    native_name TEXT
+);
+
+CREATE TABLE IF NOT EXISTS raw.languages (
+    iso_639_1 TEXT,
+    english_name TEXT,
+    name TEXT
+)

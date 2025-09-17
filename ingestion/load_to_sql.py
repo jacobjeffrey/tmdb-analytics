@@ -8,6 +8,8 @@ MOVIES_CSV = DATA_DIR / "movies.csv"
 MOVIE_DETAILS_CSV = DATA_DIR / "movie_details.csv"
 CAST_CSV = DATA_DIR / "cast.csv"
 GENRES_CSV = DATA_DIR / "genres.csv"
+COUNTRIES_CSV = DATA_DIR / "countries.csv"
+LANGUAGES_CSV = DATA_DIR / "languages.csv"
 
 conn = psycopg2.connect(database="tmdb",
                         user="tmdb",
@@ -155,4 +157,53 @@ with open(GENRES_CSV) as file:
 
 print("raw.genres updated successfully")
 conn.commit()
+
+# countries table
+with open(COUNTRIES_CSV) as file:
+    cur.execute("TRUNCATE raw.countries")
+    cur.copy_expert(
+        """
+        COPY raw.countries (
+            iso_3166_1,
+            english_name,
+            native_name
+        )
+        FROM STDIN
+        WITH (
+            FORMAT csv,
+            HEADER TRUE,
+            QUOTE '"',
+            ESCAPE '"',
+            NULL ''
+        )
+        """,
+        file
+    )
+
+print("raw.countries updated successfully")
+conn.commit()
+
+# languages table
+with open(LANGUAGES_CSV) as file:
+    cur.execute("TRUNCATE raw.languages")
+    cur.copy_expert(
+        """
+        COPY raw.languages (
+            iso_639_1,
+            english_name,
+            name
+        )
+        FROM STDIN
+        WITH (
+            FORMAT csv,
+            HEADER TRUE,
+            QUOTE '"',
+            ESCAPE '"',
+            NULL ''
+        )
+        """,
+        file
+    )
+conn.commit()
+print("raw.languages updated successfully")
 conn.close()

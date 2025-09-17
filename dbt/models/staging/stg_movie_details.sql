@@ -1,4 +1,3 @@
-
 -- models/staging/stg_movie_details.sql
 SELECT
   NULLIF(adult, '')::boolean                         AS is_adult,

@@ -1,4 +1,4 @@
--- models/intermediate/movies_production_company.sql
+-- models/intermediate/movie_production_company.sql
 with base as (
     select 
         movie_id, production_companies 

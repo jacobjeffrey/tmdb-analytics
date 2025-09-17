@@ -1,4 +1,4 @@
--- stg_tmdb__cast.sql
+-- models/staging/stg_cast.sql
 select
     NULLIF(adult, '')::boolean               as adult,
     NULLIF(gender, '')::int                  as gender,
