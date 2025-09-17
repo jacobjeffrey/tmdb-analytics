@@ -19,6 +19,7 @@ cur = conn.cursor()
 # create raw, stg, mart schemas
 cur.execute("CREATE SCHEMA IF NOT EXISTS raw")
 cur.execute("CREATE SCHEMA IF NOT EXISTS stg")
+cur.execute("CREATE SCHEMA IF NOT EXISTS int")
 cur.execute("CREATE SCHEMA IF NOT EXISTS mart")
 
 # create movies table
