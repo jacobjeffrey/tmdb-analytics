@@ -4,8 +4,8 @@ movie_data_analysis:
     dev:
       type: postgres
       host: localhost
-      user: [your_username]
-      password: [your_password]
+      user: ['your_username']
+      password: ['your_password']
       port: 5432
-      dbname: [your_database_name]
-      schema: [your_schema_name]
+      dbname: ['your_database_name']
+      schema: ['your_schema_name']
