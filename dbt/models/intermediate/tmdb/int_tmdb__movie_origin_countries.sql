@@ -1,9 +1,9 @@
--- models/intermediate/movie_origin_country.sql
+-- int_tmdb__movie_origin_countries.sql
 with base as (
     select 
         movie_id, origin_country 
     from 
-        {{ ref('stg_movie_details') }}
+        {{ ref('stg_tmdb__movie_details') }}
 )
 select
     b.movie_id,

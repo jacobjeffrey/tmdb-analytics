@@ -1,4 +1,4 @@
--- models/staging/stg_production_companies.sql
+-- stg_tmdb__production_companies.sql
 with src as (
     select production_companies::jsonb from {{ source('raw', 'movie_details')}}
 ),

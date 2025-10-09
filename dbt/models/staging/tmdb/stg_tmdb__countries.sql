@@ -1,4 +1,4 @@
--- models/staging/stg_countries.sql
+-- stg_tmdb__countries.sql
 SELECT
     NULLIF(UPPER(iso_3166_1), '')::char(2) as country_code,
     NULLIF(english_name, '')::text as english_name,

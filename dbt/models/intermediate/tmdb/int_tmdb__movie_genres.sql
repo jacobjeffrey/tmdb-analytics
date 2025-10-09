@@ -1,6 +1,6 @@
--- models/intermediate/movie_genres.sql
+-- int_tmdb__movie_genres.sql
 with base as (
-    select * from {{ ref('stg_movies') }}
+    select * from {{ ref('stg_tmdb__movies') }}
 )
 
 select 

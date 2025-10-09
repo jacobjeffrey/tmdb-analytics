@@ -1,9 +1,9 @@
--- models/intermediate/movie_production_company.sql
+-- int_tmdb__movie_production_companies.sql
 with base as (
     select 
         movie_id, production_companies 
     from 
-        {{ ref('stg_movie_details') }}
+        {{ ref('stg_tmdb__movie_details') }}
 )
 select
     b.movie_id,
