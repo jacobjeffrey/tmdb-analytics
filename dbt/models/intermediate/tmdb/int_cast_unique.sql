@@ -1,4 +1,4 @@
--- int_tmdb__movie_genres.sql
+-- int_tmdb__cast_unique.sql
 with base as (
     select * from {{ ref('stg_tmdb__cast') }}
 ),
