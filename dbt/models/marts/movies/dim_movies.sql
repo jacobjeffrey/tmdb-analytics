@@ -1,7 +1,7 @@
 -- dim_movies.sql
 with details as (
     select
-        is_adult,
+        adult,
         backdrop_path,
         homepage,
         movie_id,
@@ -14,7 +14,7 @@ with details as (
         status,
         tagline,
         title,
-        is_video
+        video
     from {{ ref('stg_tmdb__movie_details')  }}
 )
 

@@ -1,10 +1,10 @@
 -- stg_tmdb__cast.sql
 select
     NULLIF(adult, '')::boolean as adult,
-    CASE gender
-        WHEN '1' THEN 'female'
-        WHEN '2' THEN 'male'
-        WHEN '3' THEN 'non_binary'
+    CASE (gender)::int
+        WHEN 1 THEN 'female'
+        WHEN 2 THEN 'male'
+        WHEN 3 THEN 'non_binary'
         ELSE 'unknown'
     END AS gender,
     NULLIF(id, '')::bigint as person_id,

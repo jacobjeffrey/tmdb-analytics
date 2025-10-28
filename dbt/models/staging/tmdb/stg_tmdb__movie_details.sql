@@ -1,18 +1,18 @@
 -- stg_tmdb__movie_details.sql
 SELECT
-  NULLIF(adult, '')::boolean AS is_adult,
+  NULLIF(adult, '')::boolean AS adult,
   NULLIF(backdrop_path, '') AS backdrop_path,
   NULLIF(belongs_to_collection, '')::jsonb AS belongs_to_collection,
   NULLIF(budget, '')::integer AS budget,
   NULLIF(genres, '')::jsonb AS genres,
   NULLIF(homepage, '') AS homepage,
-  NULLIF(id, '')::integer AS movie_id,
+  NULLIF(id, '')::bigint AS movie_id,
   NULLIF(imdb_id, '') AS imdb_id,
   NULLIF(origin_country, '')::jsonb AS origin_country,
   LOWER(NULLIF(original_language, '')) AS original_language,
   NULLIF(original_title, '') AS original_title,
   NULLIF(overview, '') AS overview,
-  NULLIF(popularity, '')::numeric AS popularity,
+  NULLIF(popularity, '')::numeric(12,6) AS popularity,
   NULLIF(poster_path, '') AS poster_path,
   NULLIF(production_companies, '')::jsonb AS production_companies,
   NULLIF(production_countries, '')::jsonb AS production_countries,
@@ -23,7 +23,7 @@ SELECT
   NULLIF(status, '') AS status,
   NULLIF(tagline, '') AS tagline,
   NULLIF(title, '') AS title,
-  NULLIF(video, '')::boolean AS is_video,
+  NULLIF(video, '')::boolean AS video,
   NULLIF(vote_average, '')::numeric(4,2) AS vote_average,
-  NULLIF(vote_count, '')::integer AS vote_count
+  NULLIF(vote_count, '')::bigint AS vote_count
 FROM {{ source('raw','movie_details') }}

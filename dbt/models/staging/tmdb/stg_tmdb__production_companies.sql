@@ -7,7 +7,7 @@ exploded as (
         (pc ->> 'id')::bigint as company_id,
         (pc ->> 'logo_path')::text as logo_path,
         (pc ->> 'name')::text as company_name,
-        upper((pc ->> 'origin_country'))::char(2) as country_code
+        nullif(upper((pc ->> 'origin_country')),'')::char(2) as country_code
     from src
     cross join lateral jsonb_array_elements(src.production_companies) as pc
 )
