@@ -1,0 +1,15 @@
+# stg_tmdb__countries.yml
+
+version: 2
+
+models:
+  - name: stg_tmdb__countries
+    description: List of countries from TMDB's configuration/countries endpoint
+    columns:
+      - name: country_code
+        description: The iso_3166_1 code for a given country
+        tests: [not_null, unique]
+      - name: english_name
+        description: The simplified English name for a given country
+      - name: native_name
+        description: The full, official English name for a given country

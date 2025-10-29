@@ -1,0 +1,13 @@
+# stg_tmdb__movie_details.yml
+
+version: 2
+
+models:
+  - name: stg_tmdb__movie_details
+    description: List of movie details gathered from TMDB's movie/{movie_id} endpoint. Is the de facto source for movie information.
+    columns:
+      - name: adult
+      - name: backdrop_path
+      - name: native_name
+
+

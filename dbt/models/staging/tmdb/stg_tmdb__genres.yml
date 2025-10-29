@@ -1,0 +1,12 @@
+# stg_tmdb__genres.yml
+
+version: 2
+
+models:
+  - name: stg_tmdb__genres
+    description: List of movie genres from TMDB's genre/movie/list endpoint
+    columns:
+      - name: genre_id
+        tests: [not_null, unique]
+      - name: genre_name
+
