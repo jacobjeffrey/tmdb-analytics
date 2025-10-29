@@ -5,6 +5,8 @@
 name: 'movie_data_analysis'
 version: '1.0.0'
 
+vars:
+  'dbt_date:time_zone': 'America/Los_Angeles'
 # This setting configures which "profile" dbt uses for this project.
 profile: 'movie_data_analysis'
 

@@ -1,0 +1,29 @@
+# _tmdb_cast.yml
+models:
+  - name: stg_tmdb__cast
+    description: >
+      List of cast members gathered from the TMDB /movie/{movie_id}/credits endpoint. 
+      One unique casting per credit_id.
+    columns:
+      - name: adult
+        description: True if cast member is flagged as adult by TMDB
+      - name: gender
+        description: Text description of cast member's gender
+        tests:
+          - accepted_values:
+              values: ['female', 'male', 'non_binary', 'unknown']
+      - name: person_id
+        description: The cast member's unique identifier
+        tests: [not_null]
+      - name: known_for_department
+        description: Indicates cast member's primary department (ex. acting, sound, writing, etc.)
+      - name: name
+        description: The cast member's localized name
+      - name: original_name
+        description: The cast member's name in their native script
+      - name: popularity
+        description: >
+          The cast member's popularity per TMDB's metrics. 
+          Reflects a cast member's number of views and previous days' scores.
+
+
