@@ -1,6 +1,13 @@
--- int_tmdb__movie_genres.sql
+-- bridge_movies_genres.sql
+-- Bridge table for movies and genres (generated with stg_tmdb__movies)
+--
+-- Grain: One entry for each movie_id and genre_id combo
+--
+-- Transformations:
+-- - Explode the genre_ids JSON field
 with base as (
-    select * from {{ ref('stg_tmdb__movies') }}
+    select movie_id, genre_ids
+    from {{ ref('stg_tmdb__movies') }}
 )
 
 select 

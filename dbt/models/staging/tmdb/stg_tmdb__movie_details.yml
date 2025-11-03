@@ -10,57 +10,98 @@ models:
     columns:
       - name: adult
         description: Indicates whether the movie is adult-rated.
+
       - name: movie_id
         description: Unique TMDB movie identifier.
         tests: [not_null, unique]
+
       - name: imdb_id
         description: IMDb identifier, if available.
+
       - name: title
         description: Movie title as displayed in TMDB.
+
       - name: original_title
         description: Original title in the movie’s original language.
+
       - name: original_language
         description: Two-letter ISO 639-1 language code.
+
       - name: overview
         description: Short synopsis or summary of the movie.
+
       - name: tagline
         description: Marketing tagline or slogan.
+
       - name: release_date
         description: Official release date of the movie.
+
       - name: status
         description: Current production or release status (e.g. Released, Planned).
+
       - name: video
         description: True if the record refers to a video release.
+
       - name: budget
         description: Reported production budget in USD.
         tests:
           - dbt_expectations.expect_column_values_to_be_between:
               min_value: 0
+
       - name: revenue
         description: Reported total revenue in USD.
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+
       - name: runtime
         description: Movie runtime in minutes.
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+
       - name: popularity
         description: TMDB popularity score, a weighted engagement metric.
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+
       - name: vote_average
         description: Average user rating (0–10 scale).
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+
       - name: vote_count
         description: Number of user votes recorded.
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+
       - name: backdrop_path
         description: Path to backdrop image file on TMDB.
+
       - name: poster_path
         description: Path to poster image file on TMDB.
+
       - name: homepage
         description: Official website URL for the movie, if provided.
+
       - name: belongs_to_collection
         description: JSON object describing the TMDB collection the movie belongs to.
+
       - name: genres
         description: JSON array of associated genres.
+
       - name: production_companies
         description: JSON array of production companies involved.
+
       - name: production_countries
         description: JSON array of production countries.
+
       - name: spoken_languages
         description: JSON array of spoken languages.
+
       - name: origin_country
         description: JSON array of origin country codes.
+        
