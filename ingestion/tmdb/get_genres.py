@@ -6,12 +6,14 @@ from dotenv import load_dotenv
 import requests
 import pandas as pd
 
+from utils import get_root_dir
+
 load_dotenv()
 
-current_file = Path(__file__).resolve()
-project_root = current_file.parents[1]
-data_path = project_root / "data" / "genres.csv"
-os.makedirs(os.path.dirname(data_path), exist_ok=True) # ensure path exists
+PROJECT_ROOT = get_root_dir()
+DATA_DIR = PROJECT_ROOT / "data"
+GENRES_CSV = PROJECT_ROOT / "data" / "genres.csv"
+os.makedirs(os.path.dirname(GENRES_CSV), exist_ok=True) # ensure path exists
 
 api_key = os.getenv("TMDB_API_KEY")
 url = "https://api.themoviedb.org/3/genre/movie/list"
@@ -29,4 +31,4 @@ genres = response.json()["genres"]
 
 # write to csv
 df = pd.DataFrame(genres)
-df.to_csv(data_path, index=False)
+df.to_csv(GENRES_CSV, index=False)

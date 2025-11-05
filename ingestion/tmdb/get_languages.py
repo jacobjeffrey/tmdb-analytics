@@ -7,12 +7,14 @@ from dotenv import load_dotenv
 import requests
 import pandas as pd
 
+from utils import get_root_dir
+
 load_dotenv()
 
-current_file = Path(__file__).resolve()
-project_root = current_file.parents[1]
-data_path = project_root / "data" / "languages.csv"
-os.makedirs(os.path.dirname(data_path), exist_ok=True) # ensure path exists
+PROJECT_ROOT = get_root_dir()
+DATA_DIR = PROJECT_ROOT / "data"
+LANGUAGES_CSV = PROJECT_ROOT / "data" / "languages.csv"
+os.makedirs(os.path.dirname(LANGUAGES_CSV), exist_ok=True) # ensure path exists
 
 api_key = os.getenv("TMDB_API_KEY")
 url = "https://api.themoviedb.org/3/configuration/languages"
@@ -30,4 +32,4 @@ genres = response.json()
 
 # write to csv
 df = pd.DataFrame(genres)
-df.to_csv(data_path, index=False, quoting=csv.QUOTE_ALL)
+df.to_csv(LANGUAGES_CSV, index=False, quoting=csv.QUOTE_ALL)
