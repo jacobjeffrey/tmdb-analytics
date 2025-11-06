@@ -1,5 +1,5 @@
--- stg_tmdb__cast.sql
--- Staging model for TMDB cast members
+-- stg_tmdb__credits.sql
+-- Staging model for TMDB credits
 -- Source: TMDB API v3 /movie/{movie_id}/credits endpoint
 -- 
 -- Transformations applied:

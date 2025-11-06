@@ -1,7 +1,7 @@
-# stg_tmdb__cast.yml
+# stg_tmdb__credits.yml
 models:
-  - name: stg_tmdb__cast
-    description: List of cast members gathered from the TMDB /movie/{movie_id}/credits endpoint. One unique casting per credit_id.
+  - name: stg_tmdb__credits
+    description: List of credits gathered from the TMDB /movie/{movie_id}/credits endpoint. One unique casting per credit_id.
     columns:
       - name: adult
         description: True if cast member is flagged as adult by TMDB

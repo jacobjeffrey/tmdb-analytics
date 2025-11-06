@@ -4,7 +4,7 @@
 -- Grain: One entry for each unique casting
 with base as (
     select person_id, character, cast_order, movie_id
-    from {{ ref('stg_tmdb__cast') }}
+    from {{ ref('stg_tmdb__credits') }}
 )
 
 select * from base

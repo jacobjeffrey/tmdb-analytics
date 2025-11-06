@@ -6,7 +6,8 @@ PROJECT_ROOT = get_root_dir()
 DATA_DIR = PROJECT_ROOT / "data"
 MOVIES_CSV = DATA_DIR / "movies.csv"
 MOVIE_DETAILS_CSV = DATA_DIR / "movie_details.csv"
-CAST_CSV = DATA_DIR / "cast.csv"
+CREDITS_CSV = DATA_DIR / "credits.csv"
+PEOPLE_CSV = DATA_DIR / "people.csv"
 GENRES_CSV = DATA_DIR / "genres.csv"
 COUNTRIES_CSV = DATA_DIR / "countries.csv"
 LANGUAGES_CSV = DATA_DIR / "languages.csv"
@@ -100,13 +101,13 @@ with open(MOVIE_DETAILS_CSV) as file:
 print("raw.movie_details updated successfully")
 conn.commit()
 
-# update cast_members table
-with open(CAST_CSV) as file:
-    cur.execute("TRUNCATE raw.cast_members")
+# CREDITS_CSV -> raw.credits
+with open(CREDITS_CSV) as file:
+    cur.execute("TRUNCATE raw.credits")
     cur.copy_expert(
         """
-        COPY raw.cast_members (
-            adult, 
+        COPY raw.credits (
+            adult,
             gender,
             id,
             known_for_department,
@@ -132,7 +133,6 @@ with open(CAST_CSV) as file:
         file
     )
 
-print("raw.cast_members updated successfully")
 conn.commit()
 
 with open(GENRES_CSV) as file:
@@ -206,4 +206,73 @@ with open(LANGUAGES_CSV) as file:
     )
 conn.commit()
 print("raw.languages updated successfully")
+
+# CREDITS_CSV -> raw.credits
+with open(CREDITS_CSV) as file:
+    cur.execute("TRUNCATE raw.credits")
+    cur.copy_expert(
+        """
+        COPY raw.credits (
+            adult,
+            gender,
+            id,
+            known_for_department,
+            name,
+            original_name,
+            popularity,
+            profile_path,
+            cast_id,
+            character,
+            credit_id,
+            "order",
+            movie_id
+        )
+        FROM STDIN
+        WITH (
+            FORMAT csv,
+            HEADER TRUE,
+            QUOTE '"',
+            ESCAPE '"',
+            NULL ''
+        )
+        """,
+        file
+    )
+
+conn.commit()
+
+# PEOPLE_CSV -> raw.people
+with open(PEOPLE_CSV) as file:
+    cur.execute("TRUNCATE raw.people")
+    cur.copy_expert(
+        """
+        COPY raw.people (
+            adult,
+            also_known_as,
+            biography,
+            birthday,
+            deathday,
+            gender,
+            homepage,
+            id,
+            imdb_id,
+            known_for_department,
+            name,
+            place_of_birth,
+            popularity,
+            profile_path
+        )
+        FROM STDIN
+        WITH (
+            FORMAT csv,
+            HEADER TRUE,
+            QUOTE '"',
+            ESCAPE '"',
+            NULL ''
+        )
+        """,
+        file
+    )
+
+conn.commit()
 conn.close()

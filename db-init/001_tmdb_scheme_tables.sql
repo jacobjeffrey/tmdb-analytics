@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS raw.movie_details (
     vote_count TEXT
 );
 
-CREATE TABLE IF NOT EXISTS raw.cast_members (
+CREATE TABLE IF NOT EXISTS raw.credits (
     adult TEXT,
     gender TEXT,
     id TEXT,
@@ -66,6 +66,25 @@ CREATE TABLE IF NOT EXISTS raw.cast_members (
     "order" TEXT,
     movie_id TEXT
 );
+
+CREATE TABLE IF NOT EXISTS raw.people (
+    adult TEXT,
+    also_known_as TEXT,
+    biography TEXT,
+    birthday TEXT,
+    deathday TEXT,
+    gender TEXT,
+    homepage TEXT,
+    id TEXT,
+    imdb_id TEXT,
+    known_for_department TEXT,
+    name TEXT,
+    place_of_birth TEXT,
+    popularity TEXT,
+    profile_path TEXT
+);
+
+
 
 CREATE TABLE IF NOT EXISTS raw.genres (
     id TEXT,

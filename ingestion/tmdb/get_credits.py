@@ -12,7 +12,7 @@ load_dotenv()
 
 PROJECT_ROOT = get_root_dir()
 DATA_DIR = PROJECT_ROOT / "data"
-CAST_CSV = DATA_DIR / "cast.csv"
+CREDITS_CSV = DATA_DIR / "credits.csv"
 MOVIES_CSV = DATA_DIR / "movies.csv"
 BATCH_SIZE = 500 # how many ids to process before writing to csv
 BASE_URL = "https://api.themoviedb.org/3/movie/{}/credits"
@@ -27,7 +27,7 @@ except:
     raise FileNotFoundError("You must run get_movies.py before running this script")
 
 # check if cast.csv exists and if should overwrite or append
-options = resolve_write_mode(CAST_CSV, "movie_id", all_movie_ids)
+options = resolve_write_mode(CREDITS_CSV, "movie_id", all_movie_ids)
 initial_write_mode = options["write_mode"]
 ids_to_fetch = options["ids_to_fetch"]
 initial_header = options["header"]
@@ -75,7 +75,7 @@ async def collect_cast():
 
             # write batch to csv
             df = pd.DataFrame(cast_details)
-            df.to_csv(CAST_CSV, mode = write_mode, index=False, header=local_header,
+            df.to_csv(CREDITS_CSV, mode = write_mode, index=False, header=local_header,
                     quoting=csv.QUOTE_ALL)
             write_mode = "a"
             local_header=False
