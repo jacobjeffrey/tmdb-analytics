@@ -1,4 +1,4 @@
--- stg_tmdb__production_companies.sql
+-- int_tmdb__production_companies.sql
 -- Intermediate model: Unique production companies (extracted from stg_tmdb__movie_details )
 -- 
 -- Grain: One row per company
@@ -25,8 +25,8 @@ exploded as (
 
 select distinct
     company_id,
-    logo_path,
     company_name,
-    country_code
+    country_code,
+    logo_path
 from exploded
 where company_id is not null

@@ -10,6 +10,7 @@ sources:
       - name: movies
       - name: movie_details
       - name: genres
-      - name: cast_members
+      - name: credits
+      - name: people
       - name: countries
       - name: languages

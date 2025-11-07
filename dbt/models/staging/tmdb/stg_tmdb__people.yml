@@ -1,0 +1,57 @@
+# stg_tmdb__people.yml
+
+version: 2
+
+models:
+  - name: stg_tmdb__people
+    description: Staging model for TMDB people/person details from the /person/{person_id} endpoint
+    columns:
+      - name: person_id
+        description: Unique identifier for the person (primary key)
+        tests:
+          - unique
+          - not_null
+
+      - name: imdb_id
+        description: IMDb identifier for the person
+
+      - name: name
+        description: Primary name of the person
+        tests:
+          - not_null
+
+      - name: also_known_as
+        description: Alternative names or aliases (JSON array)
+
+      - name: gender
+        description: Gender of the person (female, male, non_binary, unknown)
+        tests:
+        - accepted_values:
+              values: ['female', 'male', 'non_binary', 'unknown']
+
+      - name: known_for_department
+        description: Primary department the person is known for (e.g., Acting, Directing)
+
+      - name: place_of_birth
+        description: Birthplace of the person
+
+      - name: biography
+        description: Biographical text about the person
+
+      - name: birthday
+        description: Date of birth
+
+      - name: deathday
+        description: Date of death (null if alive)
+
+      - name: popularity
+        description: TMDB popularity score
+
+      - name: adult
+        description: Flag indicating if the person works in adult content
+
+      - name: profile_path
+        description: Path to profile image on TMDB
+
+      - name: homepage
+        description: Official homepage URL for the person

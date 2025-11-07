@@ -42,4 +42,4 @@ SELECT
   -- Media paths
   NULLIF(profile_path, '') AS profile_path
 
-FROM {{ source('raw', 'cast_members') }}
+FROM {{ source('raw', 'credits') }}
