@@ -1,0 +1,22 @@
+# bridge_movies_people.yml
+
+version: 2
+
+models:
+  - name: bridge_movies_people
+    description: >
+      Bridge table for movies to people. One unique entry for person_id, character, cast_order, movie_id.
+      Derived from stg_tmdb__credits.
+    columns:
+      - name: person_id
+        description: Unique identifier for the person
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_people')
+              field: person_id
+
+
+
+
+      

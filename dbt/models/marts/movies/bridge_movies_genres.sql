@@ -12,6 +12,6 @@ with base as (
 
 select
     movie_id,
-    (g ->> 'id')::bigint as genre_id
+    (g ->> 'id')::int as genre_id
 from base
 cross join lateral jsonb_array_elements(base.genres) as g

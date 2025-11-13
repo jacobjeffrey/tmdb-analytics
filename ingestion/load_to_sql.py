@@ -134,6 +134,7 @@ with open(CREDITS_CSV) as file:
     )
 
 conn.commit()
+conn.commit()
 
 with open(GENRES_CSV) as file:
     cur.execute("TRUNCATE raw.genres")

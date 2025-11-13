@@ -18,12 +18,10 @@ def get_api_key():
         raise FileNotFoundError("TMDB_API_KEY not found in .env file.")
     
 def chunked(iterable, batch_size):
-    try:
-        iterable = list(iterable)
-        for i in range(0, len(iterable), batch_size):
-            yield iterable[i:i+batch_size]
-    except:
-        raise TypeError("Could not convert iterable into list")
+    iterable = list(iterable)
+    for i in range(0, len(iterable), batch_size):
+        yield iterable[i:i+batch_size]
+
 
 # find root directory by finding the one that contains "requirements.txt"
 def get_root_dir(marker="requirements.txt"):
@@ -65,22 +63,25 @@ def resolve_write_mode(filepath, id_name, all_ids):
 def notify_before_retry(retry_state):
     print(f"Retrying movie {retry_state.args[1]}: attempt {retry_state.attempt_number}")
 
-@retry(
-        wait=wait_exponential(multiplier=1, min=1, max=10),
-        stop=stop_after_attempt(5),
-        retry=retry_if_exception_type((aiohttp.ClientError, asyncio.TimeoutError)),
-        before_sleep = notify_before_retry
-)
+
 def serialize_json(data):
     for k,v in data.items():
         if isinstance(v, (list, dict)):
             data[k] = json.dumps(v)
     return data
-    
+
+@retry(
+    wait=wait_exponential(multiplier=1, min=1, max=10),
+    stop=stop_after_attempt(5),
+    retry=retry_if_exception_type((aiohttp.ClientError, asyncio.TimeoutError)),
+    before_sleep = notify_before_retry
+)
 async def fetch_api_data(url, session, params, semaphore, limiter, serialize=True):
+    timeout = aiohttp.ClientTimeout(total=30)  # 30 second total timeout
+    
     async with semaphore:
         async with limiter:
-            async with session.get(url, params=params) as response:
+            async with session.get(url, params=params, timeout=timeout) as response:
                 try:
                     response.raise_for_status()
                     try:
@@ -94,3 +95,4 @@ async def fetch_api_data(url, session, params, semaphore, limiter, serialize=Tru
                         return None
                 except aiohttp.ClientResponseError as e:
                     print(f"Script failed for {url} with params {params}")
+                    return None  # Should probably return None here too

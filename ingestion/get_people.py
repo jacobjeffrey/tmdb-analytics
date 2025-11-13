@@ -22,7 +22,6 @@ ensure_path_exists(DATA_DIR)
 # the credits.csv file needs to exist for this script to work
 try:
     df_credits = pd.read_csv(CREDITS_CSV, engine="python")
-    df_credits = df_credits[df_credits["order"].astype(int) <= 5] # limit to top actors per film
     all_people_ids = list(set(df_credits["id"]))
 except:
     raise FileNotFoundError("You must run get_credits.py before running this script")
@@ -48,19 +47,25 @@ async def collect_people():
     local_header = initial_header 
 
     async with aiohttp.ClientSession() as session:
-        for i, batch in enumerate(chunked(ids_to_fetch, BATCH_SIZE)):
+        for _, batch in enumerate(chunked(ids_to_fetch, BATCH_SIZE)):
             tasks = []
             for id in batch:
                 url = str.format(BASE_URL, person_id=id)
                 tasks.append(fetch_api_data(url, session, params, semaphore, limiter))
-            results = await asyncio.gather(*tasks)
+            results = await asyncio.gather(*tasks, return_exceptions=True)
 
-            # write batch to csv
-            df = pd.DataFrame(results)
-            df.to_csv(PEOPLE_CSV, mode = write_mode, index=False, header=local_header,
-                    quoting=csv.QUOTE_ALL)
-            write_mode = "a"
-            local_header=False
+            # Filter out None and exceptions
+            valid_results = []
+            for r in results:
+                if isinstance(r, Exception):
+                    print(f"Task failed with exception: {r}")
+                elif r is not None:
+                    valid_results.append(r)
+
+            if valid_results:
+                df = pd.DataFrame(valid_results)
+                df.to_csv(PEOPLE_CSV, mode=write_mode, index=False, header=local_header,
+                        quoting=csv.QUOTE_ALL)
         
 if __name__ == "__main__":
     asyncio.run(collect_people())
