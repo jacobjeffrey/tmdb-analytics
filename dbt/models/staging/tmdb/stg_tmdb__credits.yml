@@ -5,43 +5,60 @@ models:
     columns:
       - name: adult
         description: True if cast member is flagged as adult by TMDB
+
       - name: gender
         description: Text description of cast member's gender
         tests:
           - accepted_values:
               values: ['female', 'male', 'non_binary', 'unknown']
+      
       - name: person_id
         description: The cast member's unique identifier
-        tests: [not_null]
+        tests:
+          - not_null
+      
       - name: known_for_department
         description: Indicates cast member's primary department (ex. acting, sound, writing, etc.)
+      
       - name: name
         description: The cast member's localized name
+     
       - name: original_name
         description: The cast member's name in their native script
+    
       - name: popularity
         description:  The cast member's popularity per TMDB's metrics. Reflects a cast member's number of views and previous days' scores.
         tests:
           - dbt_expectations.expect_column_values_to_be_between: 
               min_value: 0
+    
       - name: profile_path
         description: Part of the URL to the cast member's photo. Combine with the base URL to access (http://image.tmdb.org/t/p/).
+    
       - name: cast_id
         description: The cast member's unique identifier in the context of the movie's other cast members.
-        tests: [not_null]
+        tests: 
+          - not_null
+   
       - name: character
         description: The name of the character the cast member plays
+    
       - name: credit_id
         description: The unique id provided for a specific casting
-        tests: [not_null, unique]
+        tests: 
+          - not_null 
+          - unique
+    
       - name: cast_order
         description: The order in which the cast member appears in the credits. A lower number often suggests a more significant role.
         tests:
           - dbt_expectations.expect_column_values_to_be_between: 
               min_value: 0
+   
       - name: movie_id
         description: The movie id for that specific casting
-        tests: [not_null]
+        tests: 
+          - not_null
 
 
 

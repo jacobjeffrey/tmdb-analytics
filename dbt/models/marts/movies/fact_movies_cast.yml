@@ -1,0 +1,52 @@
+# fact_movies_cast.yml
+
+version: 2
+
+models:
+  - name: fact_movies_cast
+    description: >
+      Fact table for movies to unique casting. One unique entry for person_id, character, cast_order, movie_id.
+      Derived from stg_tmdb__credits.
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - person_id
+            - character
+            - cast_order
+            - movie_id
+    columns:
+      - name: person_id
+        description: Unique identifier for the person
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_people')
+              field: person_id
+              # the credits endpoint has a handful of orphaned records, roughly 47 when initially ran
+              config:
+                severity: error
+                error_if: ">=100"
+                warn_if: ">=10"
+
+      - name: character
+        description: Name of the character the cast member played
+      
+      - name: cast_order
+        description: The order in which the cast member appears in the credits list. A lower number often implies a larger role.
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+
+      - name: movie_id
+        description: Unique identifier for the movie_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_movies')
+              field: movie_id
+
+
+
+
+
+      

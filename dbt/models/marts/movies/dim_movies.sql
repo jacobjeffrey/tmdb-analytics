@@ -1,21 +1,35 @@
 -- dim_movies.sql
 with details as (
     select
-        adult,
-        backdrop_path,
-        homepage,
+        -- PK
         movie_id,
-        imdb_id,
-        original_language,
-        original_title,
-        overview,
-        poster_path,
-        release_date,
-        status,
-        tagline,
+        
+        -- Core identifying attributes
         title,
-        video
-    from {{ ref('stg_tmdb__movie_details')  }}
+        original_title,
+        imdb_id,
+        
+        -- Descriptive attributes (alphabetical or logical grouping)
+        overview,
+        tagline,
+        
+        -- Dates
+        release_date,
+        
+        -- Status/flags
+        status,
+        adult,
+        video,
+        
+        -- Language/locale
+        original_language,
+        
+        -- Media paths (usually least important)
+        poster_path,
+        backdrop_path,
+        homepage
+        
+    from {{ ref('stg_tmdb__movie_details') }}
 )
 
 select * from details

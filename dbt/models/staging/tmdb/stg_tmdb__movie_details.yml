@@ -13,7 +13,9 @@ models:
 
       - name: movie_id
         description: Unique TMDB movie identifier.
-        tests: [not_null, unique]
+        tests: 
+          - not_null
+          - unique
 
       - name: imdb_id
         description: IMDb identifier, if available.

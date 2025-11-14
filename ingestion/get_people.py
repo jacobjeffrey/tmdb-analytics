@@ -66,6 +66,8 @@ async def collect_people():
                 df = pd.DataFrame(valid_results)
                 df.to_csv(PEOPLE_CSV, mode=write_mode, index=False, header=local_header,
                         quoting=csv.QUOTE_ALL)
+                write_mode = "a"
+                local_header=False
         
 if __name__ == "__main__":
     asyncio.run(collect_people())
