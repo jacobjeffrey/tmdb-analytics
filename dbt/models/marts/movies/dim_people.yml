@@ -1,10 +1,10 @@
-# stg_tmdb__people.yml
+# dim_people.yml
 
 version: 2
 
 models:
-  - name: stg_tmdb__people
-    description: Staging model for TMDB people/person details from the /person/{person_id} endpoint
+  - name: dim_people
+    description: Dim table for people. Derived from stg_tmdb__people.
     columns:
       - name: person_id
         description: Unique identifier for the person (primary key)

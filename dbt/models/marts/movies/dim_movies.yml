@@ -1,59 +1,69 @@
-# dim_movies.yml
-
 version: 2
 
 models:
   - name: dim_movies
     description: >
-      Dimension table for movies. One entry for each movie_id. Derived from stg_tmdb__movie_details
+      Dimension table for movies. One entry for each movie_id. Derived from stg_tmdb__movie_details.
     columns:
-      # Identifiers
       - name: movie_id
-        description: Unique TMDB movie identifier (primary key).
-        tests: 
+        description: Unique TMDB movie identifier.
+        tests:
           - not_null
           - unique
 
       - name: imdb_id
         description: IMDb identifier, if available.
 
-      # Core attributes
       - name: title
         description: Movie title as displayed in TMDB.
 
       - name: original_title
-        description: Original title in the movie's original language.
+        description: Original title in the movie’s original language.
 
       - name: original_language
         description: Two-letter ISO 639-1 language code.
 
-      # Content description
       - name: overview
         description: Short synopsis or summary of the movie.
 
       - name: tagline
         description: Marketing tagline or slogan.
 
-      # Release info
       - name: release_date
         description: Official release date of the movie.
 
       - name: status
         description: Current production or release status (e.g. Released, Planned).
 
-      # Flags
       - name: adult
         description: Indicates whether the movie is adult-rated.
 
       - name: video
         description: True if the record refers to a video release.
 
-      # Media assets
-      - name: poster_path
-        description: Path to poster image file on TMDB.
-
       - name: backdrop_path
         description: Path to backdrop image file on TMDB.
 
+      - name: poster_path
+        description: Path to poster image file on TMDB.
+
       - name: homepage
         description: Official website URL for the movie, if provided.
+
+      - name: belongs_to_collection
+        description: JSON object describing the TMDB collection the movie belongs to.
+
+      - name: genres
+        description: JSON array of associated genres.
+
+      - name: production_companies
+        description: JSON array of production companies involved.
+
+      - name: production_countries
+        description: JSON array of production countries.
+
+      - name: spoken_languages
+        description: JSON array of spoken languages.
+
+      - name: origin_country
+        description: JSON array of origin country codes.

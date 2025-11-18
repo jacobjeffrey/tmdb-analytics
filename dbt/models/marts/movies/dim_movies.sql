@@ -1,35 +1,32 @@
--- dim_movies.sql
 with details as (
     select
-        -- PK
         movie_id,
-        
-        -- Core identifying attributes
+        imdb_id,
+
         title,
         original_title,
-        imdb_id,
-        
-        -- Descriptive attributes (alphabetical or logical grouping)
+        original_language,
+
         overview,
         tagline,
-        
-        -- Dates
+
         release_date,
-        
-        -- Status/flags
         status,
+
         adult,
         video,
-        
-        -- Language/locale
-        original_language,
-        
-        -- Media paths (usually least important)
-        poster_path,
+
         backdrop_path,
-        homepage
-        
+        poster_path,
+        homepage,
+
+        belongs_to_collection,
+        genres,
+        production_companies,
+        production_countries,
+        spoken_languages,
+        origin_country
     from {{ ref('stg_tmdb__movie_details') }}
 )
 
-select * from details
+select * from details;
