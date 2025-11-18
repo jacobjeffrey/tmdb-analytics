@@ -1,0 +1,53 @@
+# fact_movies.yml
+
+version: 2
+
+models:
+  - name: fact_movies
+    description: Fact table for movies. Derived from stg_tmdb__movie_details
+    columns:
+      - name: movie_id
+        description: Unique identifier for a movie
+        tests:
+          - not_null
+          - unique
+          - relationships:
+              to: ref('dim_movies')
+              field: movie_id
+
+      - name: budget
+        description: Reported production budget in USD.
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+
+      - name: revenue
+        description: Reported total revenue in USD.
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+
+      - name: runtime
+        description: Movie runtime in minutes.
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+
+      - name: popularity
+        description: TMDB popularity score, a weighted engagement metric.
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+      
+      - name: vote_average
+        description: Average user rating (0–10 scale).
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+              max_value: 10
+
+      - name: vote_count
+        description: Number of user votes recorded.
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0

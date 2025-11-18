@@ -21,4 +21,4 @@ with details as (
     from {{ ref('stg_tmdb__movie_details') }}
 )
 
-select * from details;
+select * from details

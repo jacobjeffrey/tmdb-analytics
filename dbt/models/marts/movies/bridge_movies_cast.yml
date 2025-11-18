@@ -1,11 +1,11 @@
-# fact_movies_cast.yml
+# bridge_movies_cast.yml
 
 version: 2
 
 models:
-  - name: fact_movies_cast
+  - name: bridge_movies_cast
     description: >
-      Fact table for movies to unique casting. One unique entry for person_id, character, cast_order, movie_id.
+      Bridge table for movies to unique casting. One unique entry for person_id, character, cast_order, movie_id.
       Derived from stg_tmdb__credits.
     tests:
       - dbt_utils.unique_combination_of_columns:
