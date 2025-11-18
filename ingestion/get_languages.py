@@ -24,12 +24,16 @@ params = {
     "api_key": api_key,
 }
 
-# get genre data
-response = session.get(url, params=params)
-response.raise_for_status()
-data = response.json()
-genres = response.json()
+# get languages
+def collect_languages():
+    response = session.get(url, params=params)
+    response.raise_for_status()
+    data = response.json()
+    genres = response.json()
 
-# write to csv
-df = pd.DataFrame(genres)
-df.to_csv(LANGUAGES_CSV, index=False, quoting=csv.QUOTE_ALL)
+    # write to csv
+    df = pd.DataFrame(genres)
+    df.to_csv(LANGUAGES_CSV, index=False, quoting=csv.QUOTE_ALL)
+
+if __name__ == "__main__":
+    collect_languages()

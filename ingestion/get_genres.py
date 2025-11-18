@@ -24,11 +24,15 @@ params = {
 }
 
 # get genre data
-response = session.get(url, params=params)
-response.raise_for_status()
-data = response.json()
-genres = response.json()["genres"]
+def collect_genres():
+    response = session.get(url, params=params)
+    response.raise_for_status()
+    data = response.json()
+    genres = response.json()["genres"]
 
-# write to csv
-df = pd.DataFrame(genres)
-df.to_csv(GENRES_CSV, index=False)
+    # write to csv
+    df = pd.DataFrame(genres)
+    df.to_csv(GENRES_CSV, index=False)
+
+if __name__ == "__main__":
+    collect_genres()
