@@ -13,27 +13,35 @@ from load_to_sql import load_to_sql
 async def main():  
     print("Starting TMDB data ingestion...")
 
+    print("Collecting movies")
     await collect_movies()
     print("Movies collected successfully")
 
+    print("Collecting movie details")
     await collect_movie_details()
     print("Movie details collected successfully")
 
+    print("Collecting credts")
     await collect_credits()
     print("Credits collected successfully")
 
+    print("Collecting people")
     await collect_people()
     print("People collected successfully")
 
+    print("Collecting genres")
     collect_genres()
     print("Genres collected successfully")
 
+    print("Collecting languages")
     collect_languages()
     print("Languages collected successfully")
 
+    print("Collecting countries")
     collect_countries()
     print("Countries collected successfully")
 
+    print("Loading to SQL")
     load_to_sql()
     print("Ingestion complete")
 
