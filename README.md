@@ -59,16 +59,31 @@ Every model has tests: primary key uniqueness, not-null constraints, referential
 Building interactive dashboards to explore trends like ROI by genre, actor career earnings, and budget evolution over time.
 ## Data Models
 
-[Explain your modeling approach - why star schema? Why bridge tables? What tradeoffs did you make?]
+The project uses a **Kimball-inspired star schema** optimized for movie analytics queries.
 
-Example: "I went with a Kimball-style star schema because [reason]. Used bridge tables for [relationships] since [reason]. Kept [some data] as JSON because [reason]."
+**Why star schema:**
+Analytical queries like "revenue by genre" or "top actors by box office" are just a couple of joins in a star schema vs 6-7 joins if everything was normalized. TMDB's data maps cleanly to dimensions and facts, and BI tools expect this structure.
+
+**Design decisions:**
+- **Bridge tables for cast and genres** - These many-to-many relationships are queried constantly ("top grossing actors", "best performing genres"), so I normalized them into proper bridge tables
+- **JSON for production countries/companies/languages** - Rarely filtered or aggregated, so kept as JSON in `dim_movies` rather than creating additional bridge tables. Postgres has solid JSON support if needed later
+- **Popularity in `dim_people`** - Technically a metric, but it's a snapshot value used for filtering/context rather than time-series analysis. If I track popularity over time, I'd refactor to SCD Type 2 or a separate fact table
 
 **Key models:**
-- `dim_[entity]` - [What this dimension represents]
-- `fact_[entity]` - [What metrics this captures]
-- `bridge_[relationship]` - [What many-to-many relationship this handles]
 
-[Optional: Include your dbt lineage graph if you have one]
+**Dimensions:**
+- `dim_movies` - Core movie info: title, release date, runtime, budget, revenue, ratings
+- `dim_people` - Cast and crew: name, biography, popularity
+- `dim_genres`, `dim_languages`, `dim_countries`, `dim_production_companies` - Reference data
+
+**Facts:**
+- `fact_movies` - Movie performance metrics: revenue, budget, vote counts (one row per movie)
+
+**Bridges:**
+- `bridge_movies_cast` - Movies ↔ People with role details (character, cast order)
+- `bridge_movies_genres` - Movies ↔ Genres (many-to-many)
+
+![dbt lineage graph](docs/images/dbt-dag.png)
 
 ## Getting Started
 
