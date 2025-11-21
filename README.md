@@ -66,7 +66,8 @@ Analytical queries like "revenue by genre" or "top actors by box office" are jus
 
 **Design decisions:**
 - **Bridge tables for cast and genres** - These many-to-many relationships are queried constantly ("top grossing actors", "best performing genres"), so I normalized them into proper bridge tables
-- **JSON for production countries/companies/languages** - Rarely filtered or aggregated, so kept as JSON in `dim_movies` rather than creating additional bridge tables. Postgres has solid JSON support if needed later
+- **Exploded production companies from movie details** - TMDB's production_company endpoint was redundant with data already in movie_details, so I extracted and deduped companies directly from the nested JSON arrays in the intermediate layer
+- **JSON for production countries/languages** - Rarely filtered or aggregated, so kept as JSON in `dim_movies` rather than creating additional bridge tables. Postgres has solid JSON support if needed later
 - **Popularity in `dim_people`** - Technically a metric, but it's a snapshot value used for filtering/context rather than time-series analysis. If I track popularity over time, I'd refactor to SCD Type 2 or a separate fact table
 
 **Key models:**
