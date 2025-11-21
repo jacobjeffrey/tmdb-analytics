@@ -31,7 +31,7 @@ params = {
 }
 
 # asynchronous session options
-limiter = AsyncLimiter(max_rate=40, time_period=1)
+limiter = AsyncLimiter(max_rate=30, time_period=1)
 semaphore = asyncio.Semaphore(10)
 
 

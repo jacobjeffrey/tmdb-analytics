@@ -24,14 +24,39 @@ I built this project to familiarize myself with dbt and get some SQL practice in
 
 ## How It Works
 
-The project is essentially a fairly forward data pipeline, starting with TMDB API ingestion into local CSV files. The data from these files is then read into the Postgres instance running on Docker. From there, the data is transformed into staging, intermediate, and mart layers with dbt. The models from these layers then feed into the upcoming Streamlit dashboard.
+This is a straightforward ELT pipeline: extract from TMDB API, load raw data into Postgres, transform with dbt, and visualize in Streamlit.
 
 ```
-[TMDB API] → [Ingestion] → [Raw Files (CSV)] → [Database/Raw Schema] → [dbt Models] → [Streamlit]
+TMDB API → Python Extraction → CSV (intermediate) → PostgreSQL (raw) → dbt Transformations → Streamlit
 ```
 
-[Explain each step briefly - what happens and why?]
+**1. Data Ingestion (Python → CSV → PostgreSQL)**
 
+Fetch data from TMDB API endpoints (movies, credits, people, genres, etc.) and save to local CSV files first. I cache to CSV so I can explore the data in Jupyter and explore the output and do quick validation checks.
+
+The extraction uses async requests to handle tens of thousands of records efficiently while respecting TMDB's rate limit (~40 requests per second). Added retry logic with exponential backoff for timeouts and network hiccups.
+
+Once validated, CSV files are bulk-loaded into Postgres raw tables.
+
+
+**2. Data Transformation (dbt)**
+
+**Staging layer** - Clean and standardize raw data (rename fields, fix data types, handle nulls). One staging model per raw source table.
+
+**Intermediate layer** - Unnest some JSON fields to create new tables.
+
+**Marts layer** - Build analytics-ready models:
+- **Dimensions**: movies, people, genres, countries, languages, production companies
+- **Facts**: movie performance metrics (revenue, budget, ratings)
+- **Bridge tables**: many-to-many relationships for cast and genres
+
+I used bridge tables for cast and genres (queried constantly) and kept production countries as JSON (rarely filtered).
+
+Every model has tests: primary key uniqueness, not-null constraints, referential integrity checks.
+
+**3. Analytics Frontend (Streamlit) - WIP**
+
+Building interactive dashboards to explore trends like ROI by genre, actor career earnings, and budget evolution over time.
 ## Data Models
 
 [Explain your modeling approach - why star schema? Why bridge tables? What tradeoffs did you make?]

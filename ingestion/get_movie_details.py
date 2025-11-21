@@ -29,7 +29,7 @@ API_KEY = get_api_key()
 params = {"api_key": API_KEY}
 
 # asynchronous session options
-limiter = AsyncLimiter(max_rate=40, time_period=1)
+limiter = AsyncLimiter(max_rate=30, time_period=1)
 semaphore = asyncio.Semaphore(10)
 
 
