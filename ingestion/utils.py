@@ -65,10 +65,10 @@ def notify_before_retry(retry_state):
 
 
 def serialize_json(data):
-    for k,v in data.items():
-        if isinstance(v, (list, dict)):
-            data[k] = json.dumps(v)
-    return data
+    return {
+        k: json.dumps(v) if isinstance(v, (list, dict)) else v
+        for k, v in data.items()
+    }
 
 @retry(
     wait=wait_exponential(multiplier=1, min=1, max=10),

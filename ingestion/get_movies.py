@@ -37,7 +37,7 @@ YEAR_RANGES = [
 ]
 
 # asynchronous session options
-limiter = AsyncLimiter(max_rate=30, time_period=1)
+limiter = AsyncLimiter(max_rate=40, time_period=1)
 semaphore = asyncio.Semaphore(10)
 
 
@@ -53,6 +53,7 @@ async def collect_movies():
                 "primary_release_date.gte": start,
                 "primary_release_date.lte": end,
                 "vote_count.gte": 10,  # filter out low quality and obscure results
+                "sort_by": "primary_release_date.asc", # sort to avoid pagination quirks
             }
 
             first_page_data = await fetch_api_data(

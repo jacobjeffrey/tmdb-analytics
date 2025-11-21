@@ -1,261 +1,188 @@
 # TMDB Movie Analytics Platform
 
-> End-to-end analytics platform for movie industry data powered by The Movie Database (TMDB) API
+> An end-to-end analytics engineering platform featuring TMDB API data.
 
-## 🎯 Project Overview
+## What This Is
 
-This project builds a complete analytics pipeline from TMDB API ingestion through dimensional modeling to visualization, enabling comprehensive movie industry analysis including box office performance, cast analytics, genre trends, and production company insights.
+I built this project to familiarize myself with dbt and get some SQL practice in. And since I've been into movies lately, I decided to combine my interests and use TMDB's api data to build this analytics pipeline. It will eventually feature dashboards on trends such as ROI per genre, most popular actors today, etc.
 
-## 📊 Current Status
+## Current Status
 
-### ✅ Completed
-- **Data Ingestion**: TMDB API extraction pipeline built and tested
-- **Data Transformation**: 20+ dbt models implemented with full test coverage
-- **Dimensional Modeling**: Star schema with facts, dimensions, and bridge tables
-- **Data Quality**: Comprehensive dbt tests ensuring data integrity
+**What's working:** Just finished the dbt models and tests, which revealed issues in my ingestion logic. In particular, I learned some records in the 'credit' endpoint don't have a corresponding 'people' entry, requiring me to fix how retries and invalid responses are handled.
 
-### 🚧 In Progress
-- **Analytics Frontend**: Building interactive dashboards and visualizations
+**What I'm working on:** After finishing this readme, I'll start working on an analytics dashboard with Streamlit.
 
-### 📋 Planned
-- Refactor ingestion to be modular and use parquet
-- Automated daily refresh and reporting
+**What's next:** Once the dashboard is done, I'll refactor the ingestion layer. It works, but it's super repetitive and could reworked into a modular ingestion class. I also currently use CSV, which I learned can be quite a pain to use when your data has odd characters or quotes. I will most likely use Parquet instead. Lastly, I'll add some light orchestration. According to [TMDB staff](https://www.themoviedb.org/talk/65eba9f36cf3d501844557ea), the API should have new data by 08:00 UTC daily, so it should be simple to implement.
 
-## 🏗️ Architecture
+## Tech Stack
+
+- **Data Source:** [TMDB API](https://developer.themoviedb.org/docs/getting-started)
+- **Storage:** Postgres (running in Docker)
+- **Transformation:** dbt/other
+- **Frontend:** Streamlit 
+
+
+## How It Works
+
+The project is essentially a fairly forward data pipeline, starting with TMDB API ingestion into local CSV files. The data from these files is then read into the Postgres instance running on Docker. From there, the data is transformed into staging, intermediate, and mart layers with dbt. The models from these layers then feed into the upcoming Streamlit dashboard.
 
 ```
-TMDB API → Ingestion Layer → Raw Data → Staging → Intermediate → Marts → Frontend (WIP)
+[TMDB API] → [Ingestion] → [Raw Files (CSV)] → [Database/Raw Schema] → [dbt Models] → [Streamlit]
 ```
 
-**Tech Stack:**
-- **Ingestion**: [Python/your tool]
-- **Storage**: [Snowflake/BigQuery/Postgres/Redshift]
-- **Transformation**: dbt Core
-- **Frontend**: [React/Streamlit/Tableau/Looker] *(planned)*
-- **Orchestration**: [Airflow/Prefect/dbt Cloud] *(if applicable)*
+[Explain each step briefly - what happens and why?]
 
-## 📊 Data Models
+## Data Models
 
-### Data Modeling Approach
+[Explain your modeling approach - why star schema? Why bridge tables? What tradeoffs did you make?]
 
-The project uses a **Kimball-inspired dimensional model** optimized for movie analytics queries.
+Example: "I went with a Kimball-style star schema because [reason]. Used bridge tables for [relationships] since [reason]. Kept [some data] as JSON because [reason]."
 
-**Design decisions:**
-- Mostly Star schema with fact and dimension tables
-- Bridge tables for high-cardinality, frequently-queried relationships (genres, cast)
-- Semi-structured data retained for lower-priority attributes (languages, production countries)
-- Optimized for common analytical patterns: genre performance, cast analysis, box office trends
+**Key models:**
+- `dim_[entity]` - [What this dimension represents]
+- `fact_[entity]` - [What metrics this captures]
+- `bridge_[relationship]` - [What many-to-many relationship this handles]
 
-### Model Architecture
+[Optional: Include your dbt lineage graph if you have one]
 
-The project follows a layered approach with clear separation of concerns:
+## Getting Started
 
-**Raw Layer** (`raw_*`)
-- Unprocessed JSON responses from TMDB API
-- Preserves source data exactly as received
-- Models: `raw.movies`, `raw.people`, `raw.credits`, `raw.countries`, `raw.genres`, `raw.languages`, `raw.movie_details`
+### You'll Need
 
-**Staging Layer** (`stg_tmdb_*`)
-- Cleaned and typed source data
-- Standardized column names and data types
-- Basic deduplication and filtering
-- Models: `stg_tmdb_movie_details`, `stg_tmdb_people`, `stg_tmdb_credits`, `stg_tmdb_countries`, `stg_tmdb_genres`, `stg_tmdb_languages`
-
-**Intermediate Layer** (`int_*`)
-- Unnesting of semi-structured data (e.g., exploding production companies from JSON arrays)
-- Models: `int_production_companies`
-
-**Marts Layer** (Analytics-Ready)
-- **Dimensions**: 
-  - `dim_movies` - Core movie attributes (title, release date, runtime, budget, revenue)
-  - `dim_people` - Cast information
-  - `dim_countries` - Country reference data
-  - `dim_genres` - Genre classifications
-  - `dim_languages` - Language reference data
-  - `dim_production_companies` - Production company details
-  
-- **Facts**: 
-  - `fact_movies` - Movie performance metrics and aggregated stats
-  
-- **Bridge Tables** (Many-to-Many relationships):
-  - `bridge_movies_cast` - Movies ↔ Actors/Crew relationships
-  - `bridge_movies_genres` - Movies ↔ Genres relationships
-
-### dbt Lineage
-
-![dbt Lineage Graph](docs/images/dbt-dag.png)
-
-The lineage graph above shows the complete data flow from raw TMDB API data through to analytics-ready dimensional models.
-
-## 🚀 Getting Started
-
-### Prerequisites
 - Python 3.8+
-- [Your database]
-- dbt Core installed (`pip install dbt-[adapter]`)
-- TMDB API key ([Get one here](https://www.themoviedb.org/settings/api))
+- Docker & Docker Compose
+- dbt Core (`pip install dbt-postgres`)
+- A TMDB API key ([grab one here](https://www.themoviedb.org/settings/api))
 
-### Installation
+### Setup
 
-1. Clone the repository
+**1. Clone and install**
 ```bash
 git clone [your-repo-url]
 cd tmdb-analytics
-```
-
-2. Install dependencies
-```bash
 pip install -r requirements.txt
 ```
 
-3. Set up environment variables
+**2. Environment config**
 ```bash
 cp .env.example .env
 # Edit .env with your TMDB API key and database credentials
 ```
 
-4. Configure dbt profiles
+**3. Start the database**
 ```bash
-# Edit ~/.dbt/profiles.yml with your database connection
+docker-compose up -d
+
+# Check it's running
+docker ps
 ```
 
-### Running the Pipeline
+**4. Configure dbt**
+Edit `~/.dbt/profiles.yml` or use the one in the project:
+```yaml
+tmdb_analytics:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: localhost
+      port: 5432
+      user: tmdb_user
+      password: tmdb_password
+      dbname: tmdb_analytics
+      schema: public
+      threads: 4
+```
 
-**Ingest data from TMDB API:**
+**5. Run the pipeline**
 ```bash
+# Pull data from TMDB
 python scripts/ingest_tmdb.py
-```
 
-**Run dbt transformations:**
-```bash
-# Run all models
+# Transform with dbt
 dbt run
-
-# Run specific layer
-dbt run --select staging
-dbt run --select marts
-
-# Run with full refresh
-dbt run --full-refresh
-```
-
-**Run data quality tests:**
-```bash
 dbt test
-```
 
-**Generate documentation:**
-```bash
+# Check out the docs
 dbt docs generate
-dbt docs serve
+dbt docs serve  # Opens on localhost:8080
 ```
 
-## 📁 Project Structure
+**Docker tips:**
+```bash
+# Stop everything
+docker-compose down
+
+# View logs
+docker-compose logs -f postgres
+
+# Access PostgreSQL directly
+docker exec -it tmdb-postgres psql -U tmdb_user -d tmdb_analytics
+
+# Nuclear option (deletes all data)
+docker-compose down -v
+```
+
+## Project Structure
 
 ```
 ├── dbt/
 │   ├── models/
-│   │   ├── staging/        # stg_tmdb_* models
-│   │   ├── intermediate/   # int_* models
-│   │   └── marts/          # dim_*, fact_*, bridge_* models
-│   ├── tests/              # Custom dbt tests
-│   ├── macros/             # Reusable SQL macros
+│   │   ├── staging/      # [What these do]
+│   │   ├── intermediate/ # [What these do]
+│   │   └── marts/        # [What these do]
 │   └── dbt_project.yml
-├── ingestion/
-│   ├── tmdb_client.py      # TMDB API wrapper
-│   ├── extract.py          # Data extraction logic
-│   └── config/
-│       └── endpoints.yml   # API endpoint configurations
-├── frontend/               # (Coming soon)
-├── docs/
-│   └── images/
-│       └── dbt_lineage.png
-├── scripts/
-│   └── ingest_tmdb.py      # Main ingestion script
-├── tests/                  # Python unit tests
-├── .env.example
-├── requirements.txt
-└── README.md
+├── ingestion/            # [What's in here]
+├── frontend/             # [Current status]
+├── scripts/              # [Utility scripts]
+└── tests/                # [What you're testing]
 ```
 
-## 🧪 Testing & Data Quality
+## Things I Learned / Gotchas
 
-dbt tests validate:
-- **Uniqueness**: Primary keys in all dimension tables
-- **Referential integrity**: Foreign key relationships between facts and dimensions
-- **Not null constraints**: Required fields across all models
-- **Accepted values**: Genre codes, language codes, country codes
-- **Custom business logic**: Revenue vs budget validation, date ranges, etc.
+[This section makes it super human - share your struggles and discoveries!]
 
-Run tests:
-```bash
-# All tests
-dbt test
+- [Something that was harder than expected]
+- [A library or pattern that saved you time]
+- [A design decision you'd change if starting over]
+- [An annoying bug or API quirk you had to work around]
 
-# Specific model
-dbt test --select dim_movies
+Example:
+- "TMDB's rate limiting is aggressive - had to add exponential backoff"
+- "Bridge tables felt like overkill at first but make genre queries so much cleaner"
+- "Wish I'd used Parquet from the start instead of JSON dumps"
 
-# Specific test type
-dbt test --select test_type:unique
-```
+## What You Can Do With This
 
-## 📈 Example Analytics Use Cases
+[List 3-5 example queries or analyses this enables]
 
-With this data warehouse, you can answer questions like:
+Example:
+- Find the highest-grossing [metric] by [dimension]
+- Compare [thing] across [time period]
+- Analyze [relationship] between [X] and [Y]
 
-- What are the highest-grossing movies by genre over time?
-- Which production companies have the best ROI?
-- How do movie runtimes correlate with box office performance?
-- What are the career earnings for specific actors?
-- Which countries produce the most movies by genre?
-- How have movie budgets evolved across decades?
+## Roadmap
 
-## 📖 Documentation
+**Now:** [What you're actively working on]
 
-View the full dbt documentation with model descriptions, column definitions, and lineage:
+**Next:** [What's coming after current work]
 
-```bash
-dbt docs generate
-dbt docs serve
-```
+**Maybe Eventually:** [Nice-to-haves or moonshots]
 
-Then navigate to `http://localhost:8080`
+[Keep this casual - it's okay to say "might add X if I feel like it" or "would be cool to try Y"]
 
-## 🤝 Contributing
+## Running This Yourself
 
-This is a personal learning project, but suggestions and feedback are welcome! Feel free to open an issue.
+[Any specific notes for someone who wants to clone and run this?]
 
-## 📝 License
+[Are you open to contributions? Is this just a learning project?]
 
-[Your chosen license - MIT/Apache/All Rights Reserved]
+## Credits / Notes
 
-## 🗺️ Roadmap
-
-**Phase 1: Core Pipeline** ✅
-- [x] TMDB API ingestion
-- [x] dbt dimensional models
-- [x] Data quality tests
-
-**Phase 2: Frontend** 🚧
-- [ ] Interactive dashboard framework
-- [ ] Key metric visualizations
-- [ ] Filtering and drill-down capabilities
-
-**Phase 3: Advanced Features** 📋
-- [ ] Real-time data refresh
-- [ ] Predictive analytics (box office forecasting)
-- [ ] Sentiment analysis from reviews
-- [ ] User recommendation engine
-- [ ] Export and sharing functionality
-
-**Phase 4: Production** 📋
-- [ ] Automated orchestration
-- [ ] Cloud deployment
-- [ ] Monitoring and alerting
-- [ ] Performance optimization
+- Data from [TMDB API](https://www.themoviedb.org/) - [Any API terms you need to mention]
+- [Any tutorials, blog posts, or projects that inspired you]
+- [Shoutout to anyone who helped or gave feedback]
 
 ---
 
-**Note**: This project is under active development. The data pipeline (ingestion + dbt) is stable and tested, but the analytics frontend is still being built.
-
-**Data Source**: This project uses the TMDB API but is not endorsed or certified by TMDB.
+[Optional: Add a personal note about what you learned or what you're proud of]

@@ -46,6 +46,9 @@ models:
 
       - name: popularity
         description: TMDB popularity score at ingestion.
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
 
       - name: adult
         description: Flag indicating if the person works in adult content

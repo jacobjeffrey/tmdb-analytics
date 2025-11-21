@@ -1,5 +1,9 @@
+import os
+
 import psycopg2
 import pandas as pd
+from dotenv import load_dotenv
+
 from utils import get_root_dir
 
 PROJECT_ROOT = get_root_dir()
@@ -12,13 +16,20 @@ GENRES_CSV = DATA_DIR / "genres.csv"
 COUNTRIES_CSV = DATA_DIR / "countries.csv"
 LANGUAGES_CSV = DATA_DIR / "languages.csv"
 
+# get database settings
+load_dotenv()
+DB_HOST = os.getenv("DB_HOST")
+DB_NAME = os.getenv("DB_NAME")
+DB_PORT = os.getenv("DB_PORT")
+DB_USER = os.getenv("DB_USER")
+DB_PASSWORD = os.getenv("DB_PASSWORD")
 
 def load_to_sql():
-    conn = psycopg2.connect(database="tmdb",
-                        user="tmdb",
-                        host="localhost",
-                        password="tmdb",
-                        port=5432)
+    conn = psycopg2.connect(database=DB_NAME,
+                        user=DB_USER,
+                        host=DB_HOST,
+                        password=DB_PASSWORD,
+                        port=DB_PORT)
     cur = conn.cursor()
     # update movies table
     with open(MOVIES_CSV) as file:
