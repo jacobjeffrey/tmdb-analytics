@@ -2,13 +2,23 @@
 
 > An end-to-end analytics engineering platform featuring TMDB API data.
 
-## What This Is
+# What This Is
 
-I built this to learn dbt and dimensional modeling using data I actually find interesting. The pipeline extracts movie data from TMDB's API, transforms it with dbt into a star schema, and will eventually power Streamlit dashboards analyzing genre performance, actor trends, and box office patterns.
+This is an end-to-end analytics pipeline built around movie data from the 2000s onward. I chose this domain because I enjoy movie analytics and wanted something meaningful to practice with. The project pulls data from the TMDB API, loads it into Postgres, and transforms it with dbt into a clean star schema that supports analyses on genres, actors, and box office performance.
 
+With this pipeline, you can run analyses such as:
+- Highest-ROI genres since the 2000s (revenue/budget)
+- Top-grossing actors or studios
+- Currently most popular actors/movies
+
+These queries become straightforward because the project uses:
+- dbt to clean, test, and structure the raw API output
+- A Kimball-style star schema to flatten TMDB’s heavily nested records into well-defined dimensions, fact tables, and bridge tables
+- Bridge tables for many-to-many fields like cast and genres, eliminating the need to unnest JSON arrays at query time
+- Data quality tests that catch common TMDB API issues such as missing people records or duplicated fields
 ## Current Status
 
-**What's working:** Core pipeline complete - API ingestion, dbt transformations with 20+ models, dimensional modeling with bridge tables, comprehensive data quality tests.
+**What's working:** Core pipeline complete - Asynchronous API ingestion, dbt transformations with 17+ models, dimensional modeling with bridge tables, comprehensive data quality tests.
 
 **What I'm working on:** Building Streamlit dashboards to visualize the data.
 
@@ -18,7 +28,7 @@ I built this to learn dbt and dimensional modeling using data I actually find in
 
 - **Data Source:** [TMDB API](https://developer.themoviedb.org/docs/getting-started)
 - **Storage:** Postgres (running in Docker)
-- **Transformation:** dbt/other
+- **Transformation:** dbt core (Postgres adapter)
 - **Frontend:** Streamlit 
 
 
@@ -32,9 +42,9 @@ TMDB API → Python Extraction → CSV (intermediate) → PostgreSQL (raw) → d
 
 **1. Data Ingestion (Python → CSV → PostgreSQL)**
 
-Fetch data from TMDB API endpoints (movies, credits, people, genres, etc.) and save to local CSV files first. I cache to CSV so I can explore the data in Jupyter and explore the output and do quick validation checks.
+Fetch data from TMDB API endpoints (movies, credits, people, genres, etc.) and save to local CSV files first. I cached to CSV so I can explore the output in Jupyter to do quick EDA and validation without having to repeatedly make calls.
 
-The extraction uses async requests to handle tens of thousands of records efficiently while respecting TMDB's rate limit (~40 requests per second). Added retry logic with exponential backoff for timeouts and network hiccups.
+The extraction uses async requests to handle tens of thousands of records efficiently while respecting TMDB's rate limit (~40 requests per second). Added retry logic with exponential backoff for timeouts and network hiccups. Implemented with asyncio/ahttp and tenacity.
 
 Once validated, CSV files are bulk-loaded into Postgres raw tables.
 
@@ -65,10 +75,10 @@ The project uses a **Kimball-inspired star schema** optimized for movie analytic
 Analytical queries like "revenue by genre" or "top actors by box office" are just a couple of joins in a star schema vs 6-7 joins if everything was normalized. TMDB's data maps cleanly to dimensions and facts, and BI tools expect this structure.
 
 **Design decisions:**
-- **Bridge tables for cast and genres** - These many-to-many relationships are queried constantly ("top grossing actors", "best performing genres"), so I normalized them into proper bridge tables
+- **Bridge tables for cast, genres, and production_companies** - These many-to-many relationships are queried constantly ("top grossing actors", "best performing genres"), so I normalized them into proper bridge tables
 - **Exploded production companies from movie details** - TMDB's production_company endpoint was redundant with data already in movie_details, so I extracted and deduped companies directly from the nested JSON arrays in the intermediate layer
-- **JSON for less common fields** - Kept some fields such as 'spoken_languages' or 'production_countries' as JSON in `dim_movies` rather than creating additional bridge tables.
-- **Popularity in `dim_people`** - Technically a metric, but it's a snapshot value used for filtering/context rather than time-series analysis. If I track popularity over time, I'd refactor to SCD Type 2 or a separate fact table
+- **JSON for less common fields** - Kept some fields such as 'spoken_languages' or 'production_countries' as JSON in `dim_movies` rather than creating additional bridge tables. These may not be queried as often and may clutter the mart layer.
+- **Popularity in `dim_people`** - Technically a metric, but currently used as a snapshot in time, so a dedicated table is unneeded for now. May change in the future if I decide to track and implement SCD2.
 
 **Key models:**
 
@@ -189,8 +199,6 @@ docker-compose down -v
 
 ## Things I Learned / Gotchas
 
-[This section makes it super human - share your struggles and discoveries!]
-
 - [Something that was harder than expected]
 - [A library or pattern that saved you time]
 - [A design decision you'd change if starting over]
@@ -201,37 +209,15 @@ Example:
 - "Bridge tables felt like overkill at first but make genre queries so much cleaner"
 - "Wish I'd used Parquet from the start instead of JSON dumps"
 
-## What You Can Do With This
-
-[List 3-5 example queries or analyses this enables]
-
-Example:
-- Find the highest-grossing [metric] by [dimension]
-- Compare [thing] across [time period]
-- Analyze [relationship] between [X] and [Y]
-
-## Roadmap
-
-**Now:** [What you're actively working on]
-
-**Next:** [What's coming after current work]
-
-**Maybe Eventually:** [Nice-to-haves or moonshots]
-
-[Keep this casual - it's okay to say "might add X if I feel like it" or "would be cool to try Y"]
-
 ## Running This Yourself
 
 [Any specific notes for someone who wants to clone and run this?]
 
 [Are you open to contributions? Is this just a learning project?]
 
-## Credits / Notes
+## Credits
 
-- Data from [TMDB API](https://www.themoviedb.org/) - [Any API terms you need to mention]
-- [Any tutorials, blog posts, or projects that inspired you]
-- [Shoutout to anyone who helped or gave feedback]
+This product uses the TMDB API but is not endorsed or certified by TMDB.
 
+![The Movie Database (TMDB)](docs/images/tmdb-logo.svg).
 ---
-
-[Optional: Add a personal note about what you learned or what you're proud of]
