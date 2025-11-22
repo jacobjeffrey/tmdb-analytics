@@ -10,10 +10,8 @@ from utils import (
     get_api_key,
     get_root_dir,
     ensure_path_exists,
-    resolve_write_mode,
     chunked,
     fetch_api_data,
-    serialize_json,
 )
 
 load_dotenv()
@@ -61,19 +59,12 @@ async def collect_credits():
     except FileNotFoundError:
         raise FileNotFoundError("You must run get_movies.py before running this script")
 
-    # check if credits.csv exists and if we should overwrite or append
-    options = resolve_write_mode(CREDITS_CSV, "movie_id", all_movie_ids)
-    write_mode = options["write_mode"]
-    ids_to_fetch = options["ids_to_fetch"]
-    local_header = options["header"]
-
-    # nothing to do
-    if not len(ids_to_fetch):
-        print("No new movie IDs to fetch credits for.")
-        return
+    # need to create the file manually since the response here won't have natural headers
+    df_empty = pd.DataFrame(columns=["movie_id", "credits_data"])
+    df_empty.to_csv(CREDITS_CSV, index=False)
 
     async with aiohttp.ClientSession() as session:
-        for batch in chunked(ids_to_fetch, BATCH_SIZE):
+        for batch in chunked(all_movie_ids, BATCH_SIZE):
             tasks = []
             for movie_id in batch:
                 url = BASE_URL.format(movie_id)
@@ -90,31 +81,24 @@ async def collect_credits():
             batch_results = await asyncio.gather(*tasks)
 
             # extract credits details
-            credits_rows = []
+            results = []
             for result in batch_results:
-                data = result["data"]
                 movie_id = result["movie_id"]
-                if data and "cast" in data:
-                    for cast_member in data["cast"]:
-                        cast_member["movie_id"] = movie_id
-                        credits_rows.append(serialize_json(cast_member))
+                data = result["data"]
+                
+                if data:
+                    results.append([movie_id,data])
 
-            if not credits_rows:
-                continue
 
             # write batch to csv
-            df = pd.DataFrame(credits_rows)
+            df = pd.DataFrame(results)
             df.to_csv(
                 CREDITS_CSV,
-                mode=write_mode,
+                mode='a',
                 index=False,
-                header=local_header,
+                header=False,
                 quoting=csv.QUOTE_ALL,
             )
-
-            # after first write, always append without header
-            write_mode = "a"
-            local_header = False
 
 
 if __name__ == "__main__":

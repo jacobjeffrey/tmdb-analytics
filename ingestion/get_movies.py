@@ -14,8 +14,6 @@ from utils import (
     get_api_key,
     get_root_dir,
     ensure_path_exists,
-    resolve_write_mode,
-    chunked,
     fetch_api_data,
     serialize_json,
 )

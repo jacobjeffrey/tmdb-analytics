@@ -34,32 +34,6 @@ def get_root_dir(marker="requirements.txt"):
 def ensure_path_exists(path):
     os.makedirs(os.path.dirname(path), exist_ok=True)
 
-def resolve_write_mode(filepath, id_name, all_ids):
-    if filepath.exists():
-        filename = filepath.name
-        user_response = input(f"{filename} exists, overwrite? (y/n):")
-        if user_response.lower() == 'y':
-            write_mode = 'w'
-            ids_to_fetch = list(all_ids)
-            print(f"Fetching {len(ids_to_fetch)} entries")
-        else:
-            write_mode = 'a'
-            ids_seen = pd.read_csv(filepath)[id_name]
-            ids_to_fetch = list(set(all_ids) - set(ids_seen))
-            print(f"Currently have {len(ids_seen)} entries fetched, will fetch {len(ids_to_fetch)}")
-    else:
-        write_mode = 'w'
-        ids_to_fetch = list(all_ids)
-        print(f"Fetching {len(ids_to_fetch)} entries")
-        
-    header = (write_mode == 'w')
-
-    return {
-        "write_mode": write_mode,
-        "ids_to_fetch": ids_to_fetch,
-        "header": header
-    }
-
 def notify_before_retry(retry_state):
     print(f"Retrying movie {retry_state.args[1]}: attempt {retry_state.attempt_number}")
 

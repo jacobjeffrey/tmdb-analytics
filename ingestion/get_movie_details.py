@@ -10,7 +10,6 @@ from utils import (
     get_api_key,
     get_root_dir,
     ensure_path_exists,
-    resolve_write_mode,
     chunked,
     fetch_api_data,
 )
@@ -43,18 +42,11 @@ async def collect_movie_details():
     except FileNotFoundError:
         raise FileNotFoundError("You must run get_movies.py before running this script")
 
-    # check if movie_details.csv exists and if we should overwrite or append
-    options = resolve_write_mode(MOVIE_DETAILS_CSV, "id", all_movie_ids)
-    write_mode = options["write_mode"]
-    ids_to_fetch = options["ids_to_fetch"]
-    local_header = options["header"]
-
-    if not len(ids_to_fetch):
-        print("No new movie IDs to fetch details for.")
-        return
+    write_mode = 'w'
+    header = True
 
     async with aiohttp.ClientSession() as session:
-        for batch in chunked(ids_to_fetch, BATCH_SIZE):
+        for batch in chunked(all_movie_ids, BATCH_SIZE):
             tasks = []
             for movie_id in batch:
                 url = BASE_URL + str(movie_id)
@@ -75,13 +67,13 @@ async def collect_movie_details():
                 MOVIE_DETAILS_CSV,
                 mode=write_mode,
                 index=False,
-                header=local_header,
+                header=header,
                 quoting=csv.QUOTE_ALL,
             )
 
             # after first batch, always append without header
             write_mode = "a"
-            local_header = False
+            header = False
 
 
 if __name__ == "__main__":
