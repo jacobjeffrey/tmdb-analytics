@@ -56,9 +56,6 @@ models:
       - name: genres
         description: JSON array of associated genres.
 
-      - name: production_companies
-        description: JSON array of production companies involved.
-
       - name: production_countries
         description: JSON array of production countries.
 

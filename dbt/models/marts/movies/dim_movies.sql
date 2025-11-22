@@ -31,7 +31,6 @@ with details as (
         -- Collections & categorical attributes
         belongs_to_collection,
         genres,
-        production_companies,
         production_countries,
         spoken_languages,
         origin_country

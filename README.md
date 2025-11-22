@@ -1,18 +1,18 @@
-# TMDB Movie Analytics Platform
+# TMDB Movie Analytics
 
 > An end-to-end analytics engineering platform featuring TMDB API data.
 
 ## What This Is
 
-I built this project to familiarize myself with dbt and get some SQL practice in. And since I've been into movies lately, I decided to combine my interests and use TMDB's api data to build this analytics pipeline. It will eventually feature dashboards on trends such as ROI per genre, most popular actors today, etc.
+I built this to learn dbt and dimensional modeling using data I actually find interesting. The pipeline extracts movie data from TMDB's API, transforms it with dbt into a star schema, and will eventually power Streamlit dashboards analyzing genre performance, actor trends, and box office patterns.
 
 ## Current Status
 
-**What's working:** Just finished the dbt models and tests, which revealed issues in my ingestion logic. In particular, I learned some records in the 'credit' endpoint don't have a corresponding 'people' entry, requiring me to fix how retries and invalid responses are handled.
+**What's working:** Core pipeline complete - API ingestion, dbt transformations with 20+ models, dimensional modeling with bridge tables, comprehensive data quality tests.
 
-**What I'm working on:** After finishing this readme, I'll start working on an analytics dashboard with Streamlit.
+**What I'm working on:** Building Streamlit dashboards to visualize the data.
 
-**What's next:** Once the dashboard is done, I'll refactor the ingestion layer. It works, but it's super repetitive and could reworked into a modular ingestion class. I also currently use CSV, which I learned can be quite a pain to use when your data has odd characters or quotes. I will most likely use Parquet instead. Lastly, I'll add some light orchestration. According to [TMDB staff](https://www.themoviedb.org/talk/65eba9f36cf3d501844557ea), the API should have new data by 08:00 UTC daily, so it should be simple to implement.
+**What's next:** Refactor ingestion to be modular and use Parquet instead of CSV (learned the hard way about quote/encoding issues), then add daily orchestration since TMDB updates at 08:00 UTC.
 
 ## Tech Stack
 
@@ -67,7 +67,7 @@ Analytical queries like "revenue by genre" or "top actors by box office" are jus
 **Design decisions:**
 - **Bridge tables for cast and genres** - These many-to-many relationships are queried constantly ("top grossing actors", "best performing genres"), so I normalized them into proper bridge tables
 - **Exploded production companies from movie details** - TMDB's production_company endpoint was redundant with data already in movie_details, so I extracted and deduped companies directly from the nested JSON arrays in the intermediate layer
-- **JSON for production countries/languages** - Rarely filtered or aggregated, so kept as JSON in `dim_movies` rather than creating additional bridge tables. Postgres has solid JSON support if needed later
+- **JSON for less common fields** - Kept some fields such as 'spoken_languages' or 'production_countries' as JSON in `dim_movies` rather than creating additional bridge tables.
 - **Popularity in `dim_people`** - Technically a metric, but it's a snapshot value used for filtering/context rather than time-series analysis. If I track popularity over time, I'd refactor to SCD Type 2 or a separate fact table
 
 **Key models:**
@@ -83,6 +83,7 @@ Analytical queries like "revenue by genre" or "top actors by box office" are jus
 **Bridges:**
 - `bridge_movies_cast` - Movies ↔ People with role details (character, cast order)
 - `bridge_movies_genres` - Movies ↔ Genres (many-to-many)
+- `bridge_movies_production_companies` - Movies ↔ Production Companies (many-to-many)
 
 ![dbt lineage graph](docs/images/dbt-dag.png)
 
@@ -99,7 +100,7 @@ Analytical queries like "revenue by genre" or "top actors by box office" are jus
 
 **1. Clone and install**
 ```bash
-git clone [your-repo-url]
+git clone https://github.com/jacobjeffrey/tmdb-analytics.git
 cd tmdb-analytics
 pip install -r requirements.txt
 ```
@@ -119,28 +120,36 @@ docker ps
 ```
 
 **4. Configure dbt**
-Edit `~/.dbt/profiles.yml` or use the one in the project:
+
+Copy the example profiles file and fill in your credentials:
+```bash
+cp profiles.yml.example ~/.dbt/profiles.yml
+# Edit with your actual database credentials
+```
+
+Or manually create `~/.dbt/profiles.yml`:
 ```yaml
-tmdb_analytics:
+movie_data_analysis:
   target: dev
   outputs:
     dev:
       type: postgres
       host: localhost
       port: 5432
-      user: tmdb_user
-      password: tmdb_password
-      dbname: tmdb_analytics
-      schema: public
+      user: your_username
+      password: your_password
+      dbname: your_database_name
+      schema: your_schema_name
       threads: 4
 ```
 
 **5. Run the pipeline**
 ```bash
 # Pull data from TMDB
-python scripts/ingest_tmdb.py
+python ingestion/ingest_tmdb.py
 
 # Transform with dbt
+cd dbt
 dbt run
 dbt test
 
@@ -169,14 +178,13 @@ docker-compose down -v
 ```
 ├── dbt/
 │   ├── models/
-│   │   ├── staging/      # [What these do]
-│   │   ├── intermediate/ # [What these do]
-│   │   └── marts/        # [What these do]
+│   │   ├── staging/      # Staging models and tests
+│   │   ├── intermediate/ # Intermediate models and tests
+│   │   └── marts/        # Mart models (dim/fact/bridge) and tests
 │   └── dbt_project.yml
-├── ingestion/            # [What's in here]
-├── frontend/             # [Current status]
-├── scripts/              # [Utility scripts]
-└── tests/                # [What you're testing]
+├── ingestion/            # API Fetching and Database Loading
+├── frontend/             # TODO
+├── notebooks/            # Jupyter notebooks for quick EDA and data validation
 ```
 
 ## Things I Learned / Gotchas
