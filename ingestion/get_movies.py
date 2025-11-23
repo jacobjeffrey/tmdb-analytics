@@ -1,28 +1,22 @@
-import os
-import time
-import json
-from pathlib import Path
-import csv
-
 from dotenv import load_dotenv
 import pandas as pd
 import aiohttp
 import asyncio
 from aiolimiter import AsyncLimiter
+from tqdm.asyncio import tqdm_asyncio
 
 from utils import (
     get_api_key,
     get_root_dir,
     ensure_path_exists,
     fetch_api_data,
-    serialize_json,
 )
 
 load_dotenv()
 
 PROJECT_ROOT = get_root_dir()
 DATA_DIR = PROJECT_ROOT / "data"
-MOVIES_CSV = DATA_DIR / "movies.csv"
+MOVIES_FILE = DATA_DIR / "movies.parquet"
 API_KEY = get_api_key()
 BASE_URL = "https://api.themoviedb.org/3/discover/movie"
 
@@ -35,7 +29,7 @@ YEAR_RANGES = [
 ]
 
 # asynchronous session options
-limiter = AsyncLimiter(max_rate=30, time_period=1)
+limiter = AsyncLimiter(max_rate=35, time_period=1)
 semaphore = asyncio.Semaphore(10)
 
 
@@ -45,6 +39,7 @@ async def collect_movies():
 
     movies_data = []
     async with aiohttp.ClientSession() as session:
+        print(f"Fetching movies from {START_YEAR} to {END_YEAR}")
         for start, end in YEAR_RANGES:
             params = {
                 "api_key": API_KEY,
@@ -65,6 +60,7 @@ async def collect_movies():
             max_pages = min(first_page_data.get("total_pages", 1), 500)
 
             tasks = []
+
             for page in range(1, max_pages + 1):
                 page_params = params.copy()
                 page_params["page"] = page
@@ -79,18 +75,28 @@ async def collect_movies():
                     )
                 )
 
-            pages = await asyncio.gather(*tasks)
+            # leave status for the very last page
+            leave = (int(start[:4])==END_YEAR)
+            pages = await tqdm_asyncio.gather(
+                *tasks,
+                total=len(tasks),          # number of pages
+                desc=f"Downloading pages for year {start[:4]}",  # label for the bar
+                leave=leave,
+            )
+
             for page in pages:
                 if not page:
                     continue
                 page_results = page.get("results")
                 if page_results:
                     for movie in page_results:
-                        movies_data.append(serialize_json(movie))
+                        movies_data.append(movie)
+            
 
     # Write to CSV after all data collected
     df = pd.DataFrame(movies_data)
-    df.to_csv(MOVIES_CSV, index=False, quoting=csv.QUOTE_ALL)
+    df.to_parquet(MOVIES_FILE, engine="pyarrow", compression="snappy")
+    print("Movies download done")
 
 
 if __name__ == "__main__":
