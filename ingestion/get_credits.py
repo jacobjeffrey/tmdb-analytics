@@ -41,7 +41,7 @@ async def fetch_with_id(url, session, params, semaphore, limiter, movie_id):
         limiter,
         serialize=False,
     )
-    return {"movie_id": movie_id, "data": data}
+    return {"movie_id": movie_id, "credits_json": data}
 
 
 # get credits data
@@ -78,7 +78,7 @@ async def collect_credits():
         # extract credits details
         results = []
         for result in batch_results:            
-            if result["data"]:
+            if result["credits_json"]:
                 results.append(result)
 
 

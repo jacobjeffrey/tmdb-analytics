@@ -5,100 +5,38 @@ CREATE SCHEMA IF NOT EXISTS "int";
 CREATE SCHEMA IF NOT EXISTS "marts";
 
 --- initialize the tables ---
-CREATE TABLE IF NOT EXISTS raw.movies (
-    adult TEXT,
-    backdrop_path TEXT,
-    genre_ids TEXT,
-    id TEXT,
-    original_language TEXT,
-    original_title TEXT,
-    overview TEXT,
-    popularity TEXT,
-    poster_path TEXT,
-    release_date TEXT,
-    title TEXT,
-    video TEXT,
-    vote_average TEXT,
-    vote_count TEXT
-);
-
 CREATE TABLE IF NOT EXISTS raw.movie_details (
-    adult TEXT,
+    adult BOOLEAN,
     backdrop_path TEXT,
-    belongs_to_collection TEXT,
-    budget TEXT,
-    genres TEXT,
+    belongs_to_collection JSONB,
+    budget BIGINT,
+    genres JSONB,
     homepage TEXT,
-    id TEXT,
+    id INTEGER PRIMARY KEY,
     imdb_id TEXT,
-    origin_country TEXT,
+    origin_country JSONB,
     original_language TEXT,
     original_title TEXT,
     overview TEXT,
-    popularity TEXT,
+    popularity NUMERIC,
     poster_path TEXT,
-    production_companies TEXT,
-    production_countries TEXT,
-    release_date TEXT,
-    revenue TEXT,
-    runtime TEXT,
-    spoken_languages TEXT,
+    production_companies JSONB,
+    production_countries JSONB,
+    release_date DATE,
+    revenue BIGINT,
+    runtime INTEGER,
+    spoken_languages JSONB,
     status TEXT,
     tagline TEXT,
     title TEXT,
-    video TEXT,
-    vote_average TEXT,
-    vote_count TEXT
+    video BOOLEAN,
+    vote_average NUMERIC,
+    vote_count INTEGER
 );
+
 
 CREATE TABLE IF NOT EXISTS raw.credits (
-    adult TEXT,
-    gender TEXT,
-    id TEXT,
-    known_for_department TEXT,
-    name TEXT,
-    original_name TEXT,
-    popularity TEXT,
-    profile_path TEXT,
-    cast_id TEXT,
-    character TEXT,
-    credit_id TEXT,
-    "order" TEXT,
-    movie_id TEXT
+    movie_id INTEGER,
+    credits_json JSONB
 );
 
-CREATE TABLE IF NOT EXISTS raw.people (
-    adult TEXT,
-    also_known_as TEXT,
-    biography TEXT,
-    birthday TEXT,
-    deathday TEXT,
-    gender TEXT,
-    homepage TEXT,
-    id TEXT,
-    imdb_id TEXT,
-    known_for_department TEXT,
-    name TEXT,
-    place_of_birth TEXT,
-    popularity TEXT,
-    profile_path TEXT
-);
-
-
-
-CREATE TABLE IF NOT EXISTS raw.genres (
-    id TEXT,
-    name TEXT
-);
-
-CREATE TABLE IF NOT EXISTS raw.countries (
-    iso_3166_1 TEXT,
-    english_name TEXT,
-    native_name TEXT
-);
-
-CREATE TABLE IF NOT EXISTS raw.languages (
-    iso_639_1 TEXT,
-    english_name TEXT,
-    name TEXT
-)
