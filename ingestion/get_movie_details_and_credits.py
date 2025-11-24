@@ -80,7 +80,7 @@ async def collect_movie_details():
         # write batch to Parquet
         df = pd.DataFrame(results)
         df.to_parquet(MOVIES_DETAILS_AND_CREDITS_FILE, engine="pyarrow", compression="snappy",)
-        print("Movie details downloaded")
+        print("Movie details and credits downloaded")
 
 
 if __name__ == "__main__":
