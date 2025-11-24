@@ -8,7 +8,12 @@ pandas>=2.0.0        # Dataframes
 aiohttp              # Async API requests (for your ingestion script)
 tenacity             # Retry logic (for your ingestion script)
 python-dotenv        # To load your TMDB_API_KEY from .env
+aiolimiter
 
 # --- Dev & Exploration ---
 jupyterlab           # For your notebooks/ folder
 streamlit            # For your frontend dashboard
+
+# --- Utils ---
+tqdm
+python-dotenv

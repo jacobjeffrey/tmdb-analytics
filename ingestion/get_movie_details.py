@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 from dotenv import load_dotenv
 import pandas as pd
 import aiohttp
@@ -28,6 +30,19 @@ params = {"api_key": API_KEY}
 limiter = AsyncLimiter(max_rate=35, time_period=1)
 semaphore = asyncio.Semaphore(10)
 
+async def fetch_with_id(url, session, params, semaphore, limiter, movie_id):
+    data = await fetch_api_data(
+        url,
+        session,
+        params,
+        semaphore,
+        limiter,
+        serialize=False,
+    )
+    return {"movie_id": movie_id, 
+            "payload_json": data, 
+            "ingested_at": datetime.now(timezone.utc)
+            }
 
 async def collect_movie_details():
     ensure_path_exists(DATA_DIR)
@@ -44,12 +59,13 @@ async def collect_movie_details():
         for movie_id in all_movie_ids:
             url = BASE_URL + str(movie_id)
             tasks.append(
-                fetch_api_data(
+                fetch_with_id(
                     url,
                     session,
                     params,
                     semaphore,
                     limiter,
+                    movie_id,
                 )
             )
 
@@ -63,6 +79,7 @@ async def collect_movie_details():
         df = pd.DataFrame(results)
         df.to_parquet(MOVIES_DETAILS_FILE, engine="pyarrow", compression="snappy",)
         print("Movie details downloaded")
+        print(df.head())
 
 
 if __name__ == "__main__":

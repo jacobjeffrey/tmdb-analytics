@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 from dotenv import load_dotenv
 import pandas as pd
 import aiohttp
@@ -41,7 +43,10 @@ async def fetch_with_id(url, session, params, semaphore, limiter, movie_id):
         limiter,
         serialize=False,
     )
-    return {"movie_id": movie_id, "credits_json": data}
+    return {"movie_id": movie_id, 
+            "payload_json": data, 
+            "ingested_at": datetime.now(timezone.utc)
+            }
 
 
 # get credits data
