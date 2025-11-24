@@ -46,7 +46,7 @@ async def fetch_with_id(url, session, params, semaphore, limiter, movie_id):
             "ingested_at": datetime.now(timezone.utc)
             }
 
-async def collect_movie_details():
+async def collect_movie_details_and_credits():
     ensure_path_exists(DATA_DIR)
 
     # the movies.parquet file needs to exist for this script to work
@@ -84,4 +84,4 @@ async def collect_movie_details():
 
 
 if __name__ == "__main__":
-    asyncio.run(collect_movie_details())
+    asyncio.run(collect_movie_details_and_credits())

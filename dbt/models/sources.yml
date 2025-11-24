@@ -1,0 +1,15 @@
+version: 2
+
+sources:
+  - name: tmdb
+    schema: raw  # DuckDB usually defaults to 'main'
+    # This config tells dbt-duckdb to treat files as tables
+    meta:
+      external_location: "data/{name}/*.parquet"
+    
+    tables:
+      - name: movie_details_and_credits
+        description: >
+          Raw movie data from TMDB API in Parquet format. Includes all credits for each movie.
+          Source: TMDB API v3 https://api.themoviedb.org/3/movie/{movie_id} with append_to_response = "credits"
+      
