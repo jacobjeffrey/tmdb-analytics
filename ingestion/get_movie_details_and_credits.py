@@ -81,7 +81,6 @@ async def collect_movie_details():
         df = pd.DataFrame(results)
         df.to_parquet(MOVIES_DETAILS_AND_CREDITS_FILE, engine="pyarrow", compression="snappy",)
         print("Movie details downloaded")
-        print(df.head())
 
 
 if __name__ == "__main__":
