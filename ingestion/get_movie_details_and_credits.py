@@ -18,22 +18,20 @@ load_dotenv()
 
 PROJECT_ROOT = get_root_dir()
 DATA_DIR = PROJECT_ROOT / "data"
-CREDITS_FILE = DATA_DIR / "credits.parquet"
+MOVIES_DETAILS_AND_CREDITS_FILE = DATA_DIR / "movie_details_and_credits.parquet"
 MOVIES_FILE = DATA_DIR / "movies.parquet"
-BASE_URL = "https://api.themoviedb.org/3/movie/{}/credits"
-API_KEY = get_api_key()
+BASE_URL = "https://api.themoviedb.org/3/movie/"
 
-params = {
-    "api_key": API_KEY,
-}
+# prepare API url and parameters
+API_KEY = get_api_key()
+params = {"api_key": API_KEY,
+          "append_to_response": "credits", # add credits to the payload
+          }
 
 # asynchronous session options
 limiter = AsyncLimiter(max_rate=35, time_period=1)
 semaphore = asyncio.Semaphore(10)
 
-
-# because the credits endpoint doesn't have the movie id, we need to create a wrapper
-# that returns it
 async def fetch_with_id(url, session, params, semaphore, limiter, movie_id):
     data = await fetch_api_data(
         url,
@@ -48,9 +46,7 @@ async def fetch_with_id(url, session, params, semaphore, limiter, movie_id):
             "ingested_at": datetime.now(timezone.utc)
             }
 
-
-# get credits data
-async def collect_credits():
+async def collect_movie_details():
     ensure_path_exists(DATA_DIR)
 
     # the movies.parquet file needs to exist for this script to work
@@ -63,7 +59,7 @@ async def collect_credits():
     async with aiohttp.ClientSession() as session:
         tasks = []
         for movie_id in all_movie_ids:
-            url = BASE_URL.format(movie_id)
+            url = BASE_URL + str(movie_id)
             tasks.append(
                 fetch_with_id(
                     url,
@@ -74,24 +70,19 @@ async def collect_credits():
                     movie_id,
                 )
             )
-        print("Fetching credits")
-        batch_results = await tqdm_asyncio.gather(
+
+        print("Fetching movie details and credits")
+        results = await tqdm_asyncio.gather(
             *tasks,
-            total=len(tasks)
+            total=len(tasks),
         )
-
-        # extract credits details
-        results = []
-        for result in batch_results:            
-            if result["credits_json"]:
-                results.append(result)
-
 
         # write batch to Parquet
         df = pd.DataFrame(results)
-        df.to_parquet(CREDITS_FILE, engine="pyarrow",)
-        print("Credits downloaded")
+        df.to_parquet(MOVIES_DETAILS_AND_CREDITS_FILE, engine="pyarrow", compression="snappy",)
+        print("Movie details downloaded")
+        print(df.head())
 
 
 if __name__ == "__main__":
-    asyncio.run(collect_credits())
+    asyncio.run(collect_movie_details())
