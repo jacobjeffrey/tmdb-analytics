@@ -1,9 +1,9 @@
-# stg_tmdb__credits.yml
+# stg_tmdb__cast.yml
 
 version: 2
 
 models:
-  - name: stg_tmdb__credits
+  - name: stg_tmdb__cast
     description: >
       Staging model that unnests the cast from the credits field (i.e. the actors in the film).
       One unique row per credit_id
@@ -18,6 +18,9 @@ models:
         description: Unique identifier for the movie
         tests:
           - not_null
+          - relationships:
+              to: ref('stg_tmdb__movies')
+              field: movie_id
 
       - name: person_id
         description: Unique identifier for the actor/actress
