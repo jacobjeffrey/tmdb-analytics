@@ -35,11 +35,11 @@ models:
       +schema: stg
       +materialized: view
     intermediate:
-      +enabled: false # disable while refactoring
+      +enabled: true
       +schema: int
       +materialized: view
     marts:
-      +enabled: false # disable while refactoring
+      +enabled: true
       +schema: marts
       +materialized: table
 
