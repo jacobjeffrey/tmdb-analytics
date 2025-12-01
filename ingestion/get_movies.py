@@ -16,7 +16,7 @@ load_dotenv()
 
 PROJECT_ROOT = get_root_dir()
 DATA_DIR = PROJECT_ROOT / "data"
-MOVIES_FILE = DATA_DIR / "movies.parquet"
+MOVIES_DIR = DATA_DIR / "movies"
 API_KEY = get_api_key()
 BASE_URL = "https://api.themoviedb.org/3/discover/movie"
 
@@ -36,6 +36,7 @@ semaphore = asyncio.Semaphore(10)
 # get movie data
 async def collect_movies():
     ensure_path_exists(DATA_DIR)  # ensure data directory exists
+    ensure_path_exists(MOVIES_DIR)
 
     movies_data = []
     async with aiohttp.ClientSession() as session:
@@ -95,7 +96,7 @@ async def collect_movies():
 
     # Write to CSV after all data collected
     df = pd.DataFrame(movies_data)
-    df.to_parquet(MOVIES_FILE, engine="pyarrow", compression="snappy")
+    df.to_parquet(MOVIES_DIR / "movies.parquet", engine="pyarrow", compression="snappy")
     print("Movies download done")
 
 

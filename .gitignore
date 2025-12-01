@@ -1,10 +1,8 @@
-data/
+data/*
+!data/**/.gitkeep
 logs/
 .venv
 .env
 notebooks/.ipynb_checkpoints/
 __pycache__/
 .vscode
-target/
-dbt_packages/
-logs/

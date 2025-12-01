@@ -18,8 +18,8 @@ load_dotenv()
 
 PROJECT_ROOT = get_root_dir()
 DATA_DIR = PROJECT_ROOT / "data"
-MOVIES_DETAILS_AND_CREDITS_FILE = DATA_DIR / "movie_details_and_credits.parquet"
-MOVIES_FILE = DATA_DIR / "movies.parquet"
+MOVIES_DETAILS_AND_CREDITS_FILE = DATA_DIR / "movie_details_and_credits" / "movie_details_and_credits.parquet"
+MOVIES_FILE = DATA_DIR / "movies/movies.parquet"
 BASE_URL = "https://api.themoviedb.org/3/movie/"
 
 # prepare API url and parameters
