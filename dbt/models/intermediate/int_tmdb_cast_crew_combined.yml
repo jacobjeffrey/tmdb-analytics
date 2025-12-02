@@ -1,0 +1,21 @@
+# int_tmdb_cast_crew_combined
+version: 2
+
+models:
+  - name: int_tmdb_cast_crew_combined
+    description: >
+      Int model that combines the cast and crew staging models. One row per credit id.
+    columns:
+      - name: credit_id
+        description: Unique id for the specific credit
+        tests:
+          - not_null
+          - unique
+
+      - name: movie_id
+        description: Movie id for the credit
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_tmdb__movies')
+              field: movie_id
