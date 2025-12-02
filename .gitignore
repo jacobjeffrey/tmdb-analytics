@@ -1,4 +1,6 @@
-data/*
+# keep data subdirectories
+data/**
+!data/**/
 !data/**/.gitkeep
 logs/
 .venv
