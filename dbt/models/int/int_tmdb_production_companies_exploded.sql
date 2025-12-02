@@ -1,0 +1,37 @@
+-- int_tmdb_production_companies_exploded
+with src as (
+    select 
+        movie_id, 
+        production_companies, 
+        ingested_at
+    from {{ ref('stg_tmdb__movies')}}
+),
+
+exploded as (
+    select
+        movie_id,
+        pc.id as company_id,
+        pc.name as company_name,
+        pc.origin_country,
+        pc.logo_path,
+        ingested_at
+    from src,
+    unnest(production_companies) as t(pc)
+),
+
+deduped as (
+    select *
+    from exploded
+    qualify row_number() over (
+        partition by movie_id, company_name
+        order by ingested_at
+    ) = 1
+)
+
+select
+    movie_id,
+    company_id,
+    company_name,
+    origin_country,
+    logo_path
+from deduped
