@@ -52,7 +52,7 @@ select
     p.tagline,
     p.homepage,
 
-    -- Complex/JSON (but in your case: STRUCTS & LISTS, so no cast needed)
+    -- Complex/JSON
     p.belongs_to_collection,
     p.genres,
     p.origin_country,

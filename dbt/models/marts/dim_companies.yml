@@ -4,9 +4,7 @@ version: 2
 
 models:
   - name: dim_companies
-    description: >
-      Dim table for companies. Derived by deduping int_tmdb_production_companies_exploded.
-      One row per company_id
+    description: Dim table for companies. Derived by deduping int_tmdb_production_companies_exploded. One row per company_id
     columns:
       - name: company_id
         description: Unique identifier for the company
