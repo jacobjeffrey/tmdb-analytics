@@ -1,0 +1,39 @@
+version: 2
+
+seeds:
+  - name: countries
+    columns:
+      - name: iso_3166_1
+        description: ISO 3166-1 alpha 2 code for the country
+        tests:
+          - not_null
+          - unique
+
+      - name: english_name
+        description: Name of the country in English characters
+        
+      - name: native_name
+        description: Name of the country in its native characters
+
+  - name: genres
+    columns:
+      - name: id
+        tests:
+          - not_null
+          - unique
+
+      - name: name
+
+  - name: languages
+    columns:
+      - name: iso_639_1
+        description: ISO 639-1 code for the language
+        tests:
+          - not_null
+          - unique
+
+      - name: english_name
+        description: The language's name in English characters
+
+      - name: name
+        description: The language's name in its native script

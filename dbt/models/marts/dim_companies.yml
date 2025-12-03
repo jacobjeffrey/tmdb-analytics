@@ -1,0 +1,30 @@
+# dim_companies.yml
+
+version: 2
+
+models:
+  - name: dim_companies
+    description: >
+      Dim table for companies. Derived by deduping int_tmdb_production_companies_exploded.
+      One row per company_id
+    columns:
+      - name: company_id
+        description: Unique identifier for the company
+        tests:
+          - unique
+          - not_null
+
+      - name: company_name
+        tests:
+          - not_null
+
+      - name: origin_country
+        description: ISO 3166-1 alpha-2 code for the company's origin origin_country 
+        tests:
+          - relationships:
+              to: ref('countries')
+              field: iso_3166_1
+
+      - name: logo_path
+        description: Relative path to company's logo
+

@@ -13,7 +13,7 @@ models:
             - company_id
     columns:
       - name: movie_id
-        description: Unique identifi for the movie
+        description: Unique identifier for the movie
         tests:
           - not_null
 
@@ -27,7 +27,7 @@ models:
           - not_null
 
       - name: origin_country
-        description: ISO_3166_1 code for the company's origin origin_country
+        description: ISO 3166-1 alpha-2 code for the company's origin country
         
       - name: logo_path
         description: Relative path for the company's logo
