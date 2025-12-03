@@ -32,6 +32,9 @@ select
     movie_id,
     company_id,
     company_name,
-    origin_country,
+    case
+      when origin_country in ('', ' ') then null
+      else upper(left(origin_country, 2))
+    end as origin_country,
     logo_path
 from deduped

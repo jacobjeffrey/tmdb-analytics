@@ -28,6 +28,10 @@ models:
 
       - name: origin_country
         description: ISO 3166-1 alpha-2 code for the company's origin country
+        tests:
+          - relationships:
+              to: ref('countries')
+              field: iso_3166_1
         
       - name: logo_path
         description: Relative path for the company's logo

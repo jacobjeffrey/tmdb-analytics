@@ -12,10 +12,9 @@ models:
           - not_null
           - unique
 
-      - name: movie_id
-        description: Movie id for the credit
+      - name: credit_type
+        description: Whether a credit is for a casting or crew role
         tests:
           - not_null
-          - relationships:
-              to: ref('stg_tmdb__movies')
-              field: movie_id
+          - accepted_values:
+              values: ['Cast', 'Crew']
