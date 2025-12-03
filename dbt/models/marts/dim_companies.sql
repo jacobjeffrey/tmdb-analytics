@@ -1,4 +1,5 @@
 -- dim_companies.sql
+
 with base as (
     select
         company_id,

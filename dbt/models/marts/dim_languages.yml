@@ -1,0 +1,19 @@
+# dim_languages.yml
+
+version: 2
+
+models:
+  - name: dim_languages
+    description: Dim table for languages. Derived from the languages seed table. One row per language
+    columns:
+      - name: language_code
+        description: The ISO 639-1 code for the language
+        tests:
+          - not_null
+          - unique
+
+      - name: english_name
+        description: The language's name in English characters
+
+      - name: native_name
+        description: The language's name in its native script

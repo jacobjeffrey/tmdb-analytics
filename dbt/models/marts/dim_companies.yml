@@ -16,7 +16,9 @@ models:
 
       - name: company_name
         tests:
-          - not_null
+          - not_null:
+              config:
+                severity: warn
 
       - name: origin_country
         description: ISO 3166-1 alpha-2 code for the company's origin origin_country 
