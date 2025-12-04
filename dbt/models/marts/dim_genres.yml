@@ -10,7 +10,7 @@ models:
         description: Unique identifier for the genre
         tests:
           - not_null
-          - Unique
+          - unique
 
       - name: name
         description: Genre name
