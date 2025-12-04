@@ -53,7 +53,7 @@ models:
         description: "Official homepage URL."
 
       - name: belongs_to_collection
-        description: "Raw collection info"
+        description: "JSON of collection info (ex. franchise)"
 
       - name: backdrop_path
         description: "TMDB backdrop image path."

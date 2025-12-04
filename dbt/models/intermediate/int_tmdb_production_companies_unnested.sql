@@ -1,4 +1,4 @@
--- int_tmdb_production_companies_exploded
+-- int_tmdb_production_companies_unnested
 with src as (
     select 
         movie_id, 

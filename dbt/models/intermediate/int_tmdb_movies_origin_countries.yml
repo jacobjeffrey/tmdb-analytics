@@ -1,0 +1,27 @@
+# int_tmdb_movies_origin_countries.yml
+
+version: 2
+
+models:
+  - name: int_tmdb_movies_origin_countries
+    description: Int model that unnests the origin_countries field from stg_tmdb__movies. One row per movie_id/country genre
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - movie_id
+              - origin_country_code
+    columns:
+      - name: movie_id
+        tests:
+          - not_null
+
+      - name: origin_country_code
+        description: ISO 3166-1 alpha 2 for the given country
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('countries')
+                field: iso_3166_1
+                where: origin_country_code not in ('IK', 'UR') # ignore placeholders

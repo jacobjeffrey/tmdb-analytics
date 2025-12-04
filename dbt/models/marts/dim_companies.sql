@@ -6,7 +6,7 @@ with base as (
         company_name,
         origin_country,
         logo_path
-    from {{ ref('int_tmdb_production_companies_exploded')}}
+    from {{ ref('int_tmdb_production_companies_unnested')}}
 ),
 
 deduped as (

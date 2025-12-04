@@ -1,8 +1,8 @@
-# int_tmdb_production_companies_exploded
+# int_tmdb_production_companies_unnested
 version: 2
 
 models:
-  - name: int_tmdb_production_companies_exploded
+  - name: int_tmdb_production_companies_unnested
     description: >
       Int model that unnests, explodes and dedupes the production_company field from stg_tmdb__movies.
       One row per movie_id and company_id pair. Dervied from stg_tmdb__movies.
