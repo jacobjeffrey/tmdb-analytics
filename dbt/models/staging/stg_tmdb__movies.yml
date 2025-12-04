@@ -50,38 +50,44 @@ models:
         description: Reported total revenue in USD.
         tests:
           - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 0
+              arguments:
+                min_value: 0
               
       - name: budget
         description: Reported production budget in USD.
         tests:
           - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 0
+              arguments:
+                min_value: 0
 
       - name: runtime
         description: Movie runtime in minutes.
         tests:
           - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 0
+              arguments:
+                min_value: 0
 
       - name: popularity
         description: TMDB popularity score, a weighted engagement metric.
         tests:
           - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 0
+              arguments:
+                min_value: 0
 
       - name: vote_average
         description: Average user rating (0–10 scale).
         tests:
           - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 0
-              max_value: 10
+              arguments:
+                min_value: 0
+                max_value: 10
 
       - name: vote_count
         description: Number of user votes recorded.
         tests:
           - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 0
+              arguments:
+                min_value: 0
 
       - name: backdrop_path
         description: Path to backdrop image file on TMDB.

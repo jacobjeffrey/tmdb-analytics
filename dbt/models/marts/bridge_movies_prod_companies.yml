@@ -1,0 +1,25 @@
+# bridge_movies_prod_companies
+
+version: 2
+
+models:
+  - name: bridge_movies_prod_companies
+    description: Bridge table for movies and companies. One row per movie/company pairing.
+    columns:
+      - name: movie_id
+        description: Unique identifier for the movie
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_movies')
+                field: movie_id
+
+      - name: company_id
+        description: Unique identifier for the company
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_companies')
+                field: company_id

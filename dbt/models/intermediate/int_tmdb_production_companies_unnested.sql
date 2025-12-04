@@ -23,7 +23,7 @@ deduped as (
     select *
     from exploded
     qualify row_number() over (
-        partition by movie_id, company_name
+        partition by movie_id, company_id
         order by ingested_at
     ) = 1
 )

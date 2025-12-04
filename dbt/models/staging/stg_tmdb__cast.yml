@@ -19,8 +19,9 @@ models:
         tests:
           - not_null
           - relationships:
-              to: ref('stg_tmdb__movies')
-              field: movie_id
+              arguments:
+                to: ref('stg_tmdb__movies')
+                field: movie_id
 
       - name: person_id
         description: Unique identifier for the actor/actress
@@ -38,7 +39,8 @@ models:
       - name: gender
         tests:
           - accepted_values:
-              values: ['Female', 'Male', 'Non-binary', 'Not specified']
+              arguments:
+                values: ['Female', 'Male', 'Non-binary', 'Not specified']
 
       - name: known_for_department
         description: The actor/actress's usual deparment (i.e. acting, directing, etc.)
@@ -47,7 +49,8 @@ models:
         description: TMDB's popularity score, based on the number of views on a given day plus previous scores.
         tests:
           - dbt_expectations.expect_column_values_to_be_between: 
-              min_value: 0
+              arguments:
+                min_value: 0
 
       - name: credit_type
         description: The type of credit (i.e. cast or crew)
@@ -60,7 +63,8 @@ models:
           The order in which an actor/actress appears in the credits.
           Lower numbers often imply a more significant role
         tests:
-          - dbt_expectations.expect_column_values_to_be_between: 
-              min_value: 0
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
 
       - name: ingested_at

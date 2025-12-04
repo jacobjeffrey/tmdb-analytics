@@ -7,9 +7,10 @@ models:
     description: Int model that unnests the genre field. Derived from stg_tmdb__movies. One row per movie/genre pairing.
     data_tests:
       - dbt_utils.unique_combination_of_columns:
-          combination_of_columns:
-            - movie_id
-            - genre_id
+          arguments:
+            combination_of_columns:
+              - movie_id
+              - genre_id
     columns:
       - name: movie_id
         tests:
@@ -19,8 +20,9 @@ models:
         tests:
           - not_null
           - relationships:
-              to: ref('genres')
-              field: id
+              arguments:
+                to: ref('genres')
+                field: id
           
       - name: genre_name
         tests:

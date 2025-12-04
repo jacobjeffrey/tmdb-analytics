@@ -17,4 +17,5 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: ['Cast', 'Crew']
+              arguments:
+                values: ['Cast', 'Crew']

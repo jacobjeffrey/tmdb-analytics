@@ -1,0 +1,31 @@
+# bridge_movies_genres.yml
+
+version: 2
+
+models:
+  - name: bridge_movies_genres
+    description: Bridge table for movies to genres. One row per movie/genre combo.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - movie_id
+              - genre_id
+    columns:
+      - name: movie_id
+        description: Unique identifier for the movie
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_movies')
+                field: movie_id
+
+      - name: genre_id
+        description: Unique identifier for the company
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_genres')
+                field: genre_id
