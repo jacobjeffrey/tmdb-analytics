@@ -1,0 +1,63 @@
+# fct_movies.yml
+
+version: 2
+
+models:
+  - name: fct_movies
+    description: Fact table for movies. One row per movie.
+    columns:
+      - name: movie_id
+        description: Unique identifier for the movie
+        tests:
+          - not_null
+          - unique
+          - relationships:
+              arguments:
+                to: ref('dim_movies')
+                field: movie_id
+
+      - name: revenue
+        description: The revenue in USD, not adjusted for inflation
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+
+      - name: budget
+        description: The revenue in USD, not adjusted for inflation
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+
+      - name: runtime
+        description: The movie runtime in minutes
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+                max_value: 1000
+              config:
+                severity: warn
+
+      - name: popularity
+        description: TMDB popularity score, a weighted engagement metric.
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+
+      - name: vote_average
+        description: Average user rating (0–10 scale).
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+                max_value: 10
+
+      - name: vote_count
+        description: Number of user votes recorded.
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0

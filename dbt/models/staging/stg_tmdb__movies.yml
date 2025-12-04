@@ -46,14 +46,14 @@ models:
       - name: video
         description: True if the record refers to a video release.
 
-      - name: budget
-        description: Reported production budget in USD.
+      - name: revenue
+        description: Reported total revenue in USD.
         tests:
           - dbt_expectations.expect_column_values_to_be_between:
               min_value: 0
-
-      - name: revenue
-        description: Reported total revenue in USD.
+              
+      - name: budget
+        description: Reported production budget in USD.
         tests:
           - dbt_expectations.expect_column_values_to_be_between:
               min_value: 0
