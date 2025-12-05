@@ -10,7 +10,7 @@ with src as (
 
 -- Handle pagination quirks
 deduped as (
-    select distinct on (movie_id, payload_json)
+    select
         movie_id,
         payload_json as p,
         ingested_at

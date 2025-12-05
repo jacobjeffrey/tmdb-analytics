@@ -34,11 +34,12 @@ select
     -- Primary key
     c.credit_id,
 
-    -- Foreign keys
+    -- Movie grain
     movie_id,
-    c.id as person_id,
+    
 
     -- Person details
+    c.id as person_id,
     c.name,
     c.original_name,
     case 

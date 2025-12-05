@@ -14,7 +14,7 @@ with cast_credits as (
         character,
         cast_order,
         null as job,
-        null as department,
+        null as department
     from {{ ref('stg_tmdb__cast')}}
 ),
 
@@ -32,7 +32,7 @@ crew_credits as (
         null as character,
         null as cast_order,
         job,
-        department,
+        department
     from {{ ref('stg_tmdb__crew')}}
 )
 
@@ -49,7 +49,7 @@ select
     character,
     cast_order,
     job,
-    department,
+    department
 from cast_credits
 
 union all
@@ -67,5 +67,5 @@ select
     character,
     cast_order,
     job,
-    department,
+    department
 from crew_credits

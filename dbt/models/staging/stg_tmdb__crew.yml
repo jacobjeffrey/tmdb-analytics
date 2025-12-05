@@ -51,7 +51,7 @@ models:
                 min_value: 0
 
       - name: credit_type
-        description: The type of credit (i.e. cast or crew)
+        description: The type of credit. Always 'Crew' for this model
 
       - name: job
         description: The job the crew member has for the given credit_id

@@ -53,7 +53,7 @@ models:
                 min_value: 0
 
       - name: credit_type
-        description: The type of credit (i.e. cast or crew)
+        description: The type of credit. For this model, always 'Cast'
 
       - name: character
         description: The character the actor/actress plays for the given casting_id
