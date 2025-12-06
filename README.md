@@ -207,5 +207,5 @@ dbt docs serve     # Opens on localhost:8080
 
 This product uses the TMDB API but is not endorsed or certified by TMDB.
 
-![The Movie Database (TMDB)](docs/images/tmdb-logo.svg).
+![The Movie Database (TMDB)](docs/images/tmdb-logo.svg)
 ---
