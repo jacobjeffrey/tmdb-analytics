@@ -18,7 +18,7 @@ These queries become straightforward because the project uses:
 - Data quality tests that catch common TMDB API issues such as missing people records or duplicated fields
 ## Current Status
 
-**What's working:** Core pipeline complete - Asynchronous API ingestion, dbt transformations with 17 models, dimensional modeling with bridge tables, comprehensive data quality tests.
+**What's working:** Core pipeline complete - Asynchronous API ingestion, dbt transformations with 18 models, dimensional modeling with bridge tables, comprehensive data quality tests.
 
 **What I'm working on:** Refactoring ingestion to be modular
 

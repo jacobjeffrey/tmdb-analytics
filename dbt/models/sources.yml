@@ -12,11 +12,5 @@ sources:
           Source: TMDB API v3 https://api.themoviedb.org/3/movie/{movie_id} with append_to_response = "credits"
         meta:
           external_location: ../data/movie_details_and_credits/*.parquet
-      - name: movies
-        description: >
-          Raw movie data fetched from the discover endpoint. Largely used to collect details and credits.
-        meta:
-          external_location: ../data/movies/*.parquet
-
-
+      
       
