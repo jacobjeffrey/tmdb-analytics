@@ -14,33 +14,33 @@ With this pipeline, you can run analyses such as:
 These queries become straightforward because the project uses:
 - dbt to clean, test, and structure the raw API output
 - A Kimball-style star schema to flatten TMDB’s heavily nested records into well-defined dimensions, fact tables, and bridge tables
-- Bridge tables for many-to-many fields like cast and genres, eliminating the need to unnest JSON arrays at query time
+- Bridge tables for many-to-many fields like credits and genres, eliminating the need to unnest JSON arrays at query time
 - Data quality tests that catch common TMDB API issues such as missing people records or duplicated fields
 ## Current Status
 
 **What's working:** Core pipeline complete - Asynchronous API ingestion, dbt transformations with 17+ models, dimensional modeling with bridge tables, comprehensive data quality tests.
 
-**What I'm working on:** Building Streamlit dashboards to visualize the data.
+**What I'm working on:** Refactoring ingestion to be modular
 
-**What's next:** Refactor ingestion to be modular and use Parquet instead of CSV (learned the hard way about quote/encoding issues), then add daily orchestration since TMDB updates at 08:00 UTC.
+**What's next:** Either adding orchestration or migrating to GCP
 
 ## Tech Stack
 
 - **Data Source:** [TMDB API](https://developer.themoviedb.org/docs/getting-started)
-- **Storage:** Postgres (running in Docker)
-- **Transformation:** dbt core (Postgres adapter)
-- **Frontend:** Streamlit 
+- **Storage:** DuckDB
+- **Transformation:** dbt core
+- **Frontend:** Rill (tentative) 
 
 
 ## How It Works
 
-This is a straightforward ELT pipeline: extract from TMDB API, load raw data into Postgres, transform with dbt, and visualize in Streamlit.
+This is a straightforward ELT pipeline: extract from TMDB API, load raw data into Parquet, transform with dbt, and visualize in Rill.
 
 ```
-TMDB API → Python Extraction → CSV (intermediate) → PostgreSQL (raw) → dbt Transformations → Streamlit
+TMDB API → Python Extraction → CSV (intermediate) → Rill (raw) → dbt Transformations → Rill
 ```
 
-**1. Data Ingestion (Python → CSV → PostgreSQL)**
+**1. Data Ingestion (Python → Parquet)**
 
 Fetch data from TMDB API endpoints (movies, credits, people, genres, etc.) and save to local CSV files first. I cached to CSV so I can explore the output in Jupyter to do quick EDA and validation without having to repeatedly make calls.
 
@@ -64,7 +64,7 @@ I used bridge tables for cast and genres (queried constantly) and kept productio
 
 Every model has tests: primary key uniqueness, not-null constraints, referential integrity checks.
 
-**3. Analytics Frontend (Streamlit) - WIP**
+**3. Analytics Frontend (Rill) - WIP**
 
 Building interactive dashboards to explore trends like ROI by genre, actor career earnings, and budget evolution over time.
 ## Data Models
@@ -166,22 +166,6 @@ dbt test
 # Check out the docs
 dbt docs generate
 dbt docs serve  # Opens on localhost:8080
-```
-
-**Docker tips:**
-```bash
-# Stop everything
-docker-compose down
-
-# View logs
-docker-compose logs -f postgres
-
-# Access PostgreSQL directly
-docker exec -it tmdb-postgres psql -U tmdb_user -d tmdb_analytics
-
-# Nuclear option (deletes all data)
-docker-compose down -v
-```
 
 ## Project Structure
 
