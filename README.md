@@ -60,7 +60,7 @@ Parquet files are read directly by dbt via DuckDB's native Parquet support - no 
 **Intermediate layer** - Unnest JSON arrays and deduplicate entities (people, production companies, etc.). Cast and crew are combined into a unified credits structure here.
 
 **Marts layer** - Build analytics-ready models:
-- **Dimensions**: movies, people, genres, countries, languages, production companies
+- **Dimensions**: movies, people, genres, countries, languages, companies
 - **Facts**: `fct_movies` (performance metrics: revenue, budget, ratings), `fct_credits` (cast and crew assignments with role details)
 - **Bridge tables**: many-to-many relationships for genres, origin countries, and production companies
 
