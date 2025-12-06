@@ -181,7 +181,7 @@ dbt docs serve     # Opens on localhost:8080
 │   │   └── marts/        # Mart models (dim/fact/bridge) and tests
 │   ├── dbt_project.yml
 |   └── packages.yml
-├── ingestion/            # API Fetching and Database Loading
+├── ingestion/            # API Fetching
 ├── frontend/             # TODO
 ├── notebooks/            # Jupyter notebooks for quick EDA and data validation
 ```
