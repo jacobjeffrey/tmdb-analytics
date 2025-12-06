@@ -1,0 +1,26 @@
+# bridge_movies_origin_countries.yml
+
+version: 2
+
+models:
+  - name: bridge_movies_origin_countries
+    description: Bridge table for movies and origin countries. One row per movie/country combo.
+    columns:
+      - name: movie_id
+        description: Unique identifier for the movie
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_movies')
+                field: movie_id
+
+      - name: origin_country_code
+        desription: ISO 3166-1 alpha 2 code for the origin country
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_countries')
+                field: country_code
+                where: origin_country_code not in ('IK', 'UR')

@@ -34,33 +34,34 @@ These queries become straightforward because the project uses:
 
 ## How It Works
 
-This is a straightforward ELT pipeline: extract from TMDB API, load raw data into Parquet, transform with dbt, and visualize in Rill.
-
+This is a straightforward ELT pipeline: extract from TMDB API, load raw data into Parquet/CSV, transform with dbt, and visualize in Rill.
 ```
-TMDB API → Python Extraction → CSV (intermediate) → Rill (raw) → dbt Transformations → Rill
+TMDB API → Python Extraction → Parquet/CSV → dbt (DuckDB) → Rill
 ```
 
-**1. Data Ingestion (Python → Parquet)**
+**1. Data Ingestion (Python → Parquet/CSV)**
 
-Fetch data from TMDB API endpoints (movies, credits, people, genres, etc.) and save to local CSV files first. I cached to CSV so I can explore the output in Jupyter to do quick EDA and validation without having to repeatedly make calls.
+Fetch data from TMDB API endpoints and write to local files:
+- **Movies and movie_details → Parquet** - Core movie data with credits appended via TMDB's `append_to_response` parameter (reduces API calls by fetching movie metadata + credits in one request)
+- **Genres, countries, languages → CSV** - Static reference data loaded as dbt seed tables
 
-The extraction uses async requests to handle tens of thousands of records efficiently while respecting TMDB's rate limit (~40 requests per second). Added retry logic with exponential backoff for timeouts and network hiccups. Implemented with asyncio/ahttp and tenacity.
+The extraction uses async requests to handle tens of thousands of records efficiently while respecting TMDB's rate limit (~40 requests per second). Added retry logic with exponential backoff for timeouts and network hiccups. Implemented with asyncio/aiohttp and tenacity.
 
-Once validated, CSV files are bulk-loaded into Postgres raw tables.
+Parquet files are read directly by dbt via DuckDB's native Parquet support - no intermediate database loading required.
 
 
 **2. Data Transformation (dbt)**
 
-**Staging layer** - Clean and standardize raw data (rename fields, fix data types, handle nulls). One staging model per raw source table.
+**Staging layer** - Clean and standardize raw data from the movie_details Parquet file (rename fields, fix data types, handle nulls). Three staging models extract different aspects of the mega-file: core movie metadata, credits (cast + crew combined), and nested attributes like genres/countries.
 
-**Intermediate layer** - Unnest some JSON fields to create new tables.
+**Intermediate layer** - Unnest JSON arrays and deduplicate entities (people, production companies, etc.). Cast and crew are combined into a unified credits structure here.
 
 **Marts layer** - Build analytics-ready models:
 - **Dimensions**: movies, people, genres, countries, languages, production companies
-- **Facts**: movie performance metrics (revenue, budget, ratings)
-- **Bridge tables**: many-to-many relationships for cast and genres
+- **Facts**: `fct_movies` (performance metrics: revenue, budget, ratings), `fct_credits` (cast and crew assignments with role details)
+- **Bridge tables**: many-to-many relationships for genres, origin countries, and production companies
 
-I used bridge tables for cast and genres (queried constantly) and kept production countries as JSON (rarely filtered).
+Bridge tables normalize fields that are frequently filtered or aggregated (genres, countries). Credits became a fact table since it captures events (who worked on what movie in what role) rather than just relationships.
 
 Every model has tests: primary key uniqueness, not-null constraints, referential integrity checks.
 
