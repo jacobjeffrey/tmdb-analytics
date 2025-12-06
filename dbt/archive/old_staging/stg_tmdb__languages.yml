@@ -1,0 +1,20 @@
+# stg_tmdb__languages.yml
+
+version: 2
+
+models:
+  - name: stg_tmdb__languages
+    description: List of languages from TMDB's configuration/languages endpoint
+    columns:
+      - name: language_code
+        description: "The iso_639_1 code for a given language"
+        tests: 
+          - not_null 
+          - unique
+
+      - name: english_name
+        description: "The English name for a given language"
+
+      - name: native_name
+        description: "The name of a given language in its native script"
+

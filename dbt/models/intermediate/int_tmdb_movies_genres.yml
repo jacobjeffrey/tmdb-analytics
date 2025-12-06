@@ -1,0 +1,31 @@
+# int_tmdb_movies_genres.yml
+
+version: 2
+
+models:
+  - name: int_tmdb_movies_genres
+    description: Int model that unnests the genre field. Derived from stg_tmdb__movies. One row per movie/genre pairing.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - movie_id
+              - genre_id
+    columns:
+      - name: movie_id
+        tests:
+          - not_null
+
+      - name: genre_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('genres')
+                field: id
+          
+      - name: genre_name
+        tests:
+          - not_null:
+              config:
+                severity: warn

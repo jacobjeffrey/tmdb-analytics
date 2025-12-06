@@ -1,0 +1,16 @@
+# dim_genres.yml
+
+version: 2
+
+models:
+  - name: dim_genres
+    description: Dim table for genres. Derived from the genres seed table. One row per genre.
+    columns:
+      - name: genre_id
+        description: Unique identifier for the genre
+        tests:
+          - not_null
+          - unique
+
+      - name: name
+        description: Genre name

@@ -1,0 +1,19 @@
+# dim_countries.yml
+
+version: 2
+
+models:
+  - name: dim_countries
+    description: Dim table for countries. Derived from the countries seed table. One row per country.
+    columns:
+      - name: country_code
+        description: The ISO 3166-1 alpha 2 code for the country
+        tests:
+          - not_null
+          - unique
+
+      - name: english_name
+        description: The country's name in English characters
+
+      - name: native_name
+        description: The country's name in its native script

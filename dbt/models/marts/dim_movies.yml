@@ -1,0 +1,62 @@
+# dim_movies.yml
+
+version: 2
+
+models:
+  - name: dim_movies
+    description: Dimension table for movies from TMDB.
+    columns:
+      - name: movie_id
+        description: TMDB movie id (primary key for dim_movies).
+        tests:
+          - not_null
+          - unique
+
+      - name: imdb_id
+        description: IMDB id for the movie (if available). Not guaranteed unique in TMDB.
+        tests:
+          - unique:
+              config:
+                severity: warn
+                where: imdb_id is not null
+
+      - name: title
+        description: Localized title of the movie.
+        tests:
+          - not_null
+
+      - name: original_title
+        description: Original title as provided by TMDB.
+
+      - name: status
+        description: Release status (e.g. Released, Rumored, Post Production).
+
+      - name: release_date
+        description: Release date of the movie (if known).
+
+      - name: original_language
+        description: ISO 639-1 code for the original language
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_languages')
+                field: language_code
+                where: original_language is not null
+
+      - name: overview
+        description: Short plot summary / synopsis.
+
+      - name: tagline
+        description: Tagline for the movie.
+
+      - name: homepage
+        description: Official homepage URL.
+
+      - name: belongs_to_collection
+        description: JSON of collection info (ex. franchise)
+
+      - name: backdrop_path
+        description: TMDB backdrop image path.
+
+      - name: poster_path
+        description: TMDB poster image path.

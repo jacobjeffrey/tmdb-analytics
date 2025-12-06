@@ -1,0 +1,62 @@
+# stg_tmdb__crew.yml
+
+version: 2
+
+models:
+  - name: stg_tmdb__crew
+    description:  Staging model that unnests the crew from the credits field. One unique row per credit_id
+    columns:
+      - name: credit_id
+        description: Unique identifier for a specific casting credit
+        tests:
+          - not_null
+          - unique
+
+      - name: movie_id
+        description: Unique identifier for the movie
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_tmdb__movies')
+                field: movie_id
+
+      - name: person_id
+        description: Unique identifier for the crew member
+        tests:
+          - not_null
+
+      - name: name
+        description: The crew member's name in English
+        tests:
+          - not_null
+
+      - name: original_name
+        description: The crew member's name represented in their native language
+
+      - name: gender
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['Female', 'Male', 'Non-binary', 'Not specified']
+
+      - name: known_for_department
+        description: The crew member's usual department (i.e. acting, directing, etc.)
+
+      - name: popularity
+        description: TMDB's popularity score, based on the number of views on a given day plus previous scores.
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between: 
+              arguments:
+                min_value: 0
+
+      - name: credit_type
+        description: The type of credit. Always 'Crew' for this model
+
+      - name: job
+        description: The job the crew member has for the given credit_id
+
+      - name: department
+        description: The department the crew member is classified under for a specific row
+
+      - name: ingested_at

@@ -1,0 +1,25 @@
+# dim_production_companies.yml
+
+version: 2
+
+models:
+  - name: dim_production_companies
+    description: List of production companies available in the TMDB API. Derived from int_movies_production_companies_exploded.
+    columns:
+      - name: company_id
+        description: Unique identifier for the company
+        tests:
+          - not_null
+          - unique
+
+      - name: company_name
+      
+      - name: country_code
+        description: The uppercase ISO_3166_1 code for the country
+        tests:
+          - relationships:
+              to: ref('dim_countries')
+              field: country_code
+
+      - name: logo_path
+        description: Relative path for the company's logo. Tries to displays the most recent one.

@@ -1,0 +1,39 @@
+# int_tmdb_production_companies_unnested
+version: 2
+
+models:
+  - name: int_tmdb_production_companies_unnested
+    description: >
+      Int model that unnests, explodes and dedupes the production_company field from stg_tmdb__movies.
+      One row per movie_id and company_id pair. Dervied from stg_tmdb__movies.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - movie_id
+              - company_id
+    columns:
+      - name: movie_id
+        description: Unique identifier for the movie
+        tests:
+          - not_null
+
+      - name: company_id
+        description: Unique identifier for the company
+        tests:
+          - not_null
+
+      - name: company_name
+        tests:
+          - not_null
+
+      - name: origin_country
+        description: ISO 3166-1 alpha-2 code for the company's origin country
+        tests:
+          - relationships:
+              arguments:
+                to: ref('countries')
+                field: iso_3166_1
+        
+      - name: logo_path
+        description: Relative path for the company's logo

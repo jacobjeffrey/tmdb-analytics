@@ -1,0 +1,29 @@
+# dim_people.yml
+
+version: 2
+
+models:
+  - name: dim_people
+    description: Dim table for people. One row per person.
+    columns:
+      - name: person_id
+        description: Unique identifier for the person
+        tests:
+          - unique
+          - not_null
+
+      - name: name
+        description: Person's name in English characters
+
+      - name: original_name
+        description: Person's name in their native language
+
+      - name: gender
+        description: TMDB's reported gender for the person
+        tests:
+          - accepted_values: 
+              arguments:
+                values: ['Male', 'Female', 'Non-binary', 'Not specified']
+
+      - name: known_for_department
+        description: Typical department for the person

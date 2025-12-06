@@ -1,0 +1,35 @@
+# int_movies_production_companies_exploded.yml
+
+version: 2
+
+models:
+  - name: int_movies_production_companies_exploded
+    description: >
+      Exploded list of movies and their respective production companies.
+      Deduplicates cases where TMDB lists the same company multiple times for a single movie (data quality issue in source). 
+      Used for the bridge_movies_production_companies and dim_production_companies mart models.
+      One row per movie_id and company_id combo.
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - movie_id
+            - company_id
+    columns:
+      - name: movie_id
+        description: Unique identifier for the movie
+        tests:
+          - not_null
+
+      - name: company_id
+        description: Unique identifier for the company
+        tests:
+          - not_null
+
+      - name: logo_path
+        description: Relative path for the company's logo
+      
+      - name: country_code
+        description: The uppercase ISO_3166_1 code for the country
+
+
+      

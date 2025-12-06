@@ -1,0 +1,30 @@
+# bridge_movies_genres.yml
+
+version: 2
+
+models:
+  - name: bridge_movies_genres
+    description: >
+      Bridge table for movies and genres. One unique entry for each movie_id and genre_id combo.
+      Derived from stg_tmdb__movie_details
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - movie_id
+            - genre_id
+    columns:
+      - name: movie_id
+        description: Unique identifier for the movie
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_movies')
+              field: movie_id
+      
+      - name: genre_id
+        description: Unique identifier for the genre
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_genres')
+              field: genre_id

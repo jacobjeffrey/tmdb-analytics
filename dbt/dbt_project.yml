@@ -1,0 +1,63 @@
+
+# Name your project! Project names should contain only lowercase characters
+# and underscores. A good package name should reflect your organization's
+# name or the intended use of these models
+name: 'tmdb_analytics'
+version: '1.0.0'
+
+vars:
+  'dbt_date:time_zone': 'America/Los_Angeles'
+# This setting configures which "profile" dbt uses for this project.
+profile: 'tmdb_analytics'
+
+# These configurations specify where dbt should look for different types of files.
+# The `model-paths` config, for example, states that models in this project can be
+# found in the "models/" directory. You probably won't need to change these!
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+clean-targets:         # directories to be removed by `dbt clean`
+  - "target"
+  - "dbt_packages"
+
+
+# Configuring models
+# Full documentation: https://docs.getdbt.com/docs/configuring-models
+
+models:
+  tmdb_analytics:
+    staging:
+      +enabled: true
+      +schema: stg
+      +materialized: view
+    intermediate:
+      +enabled: true
+      +schema: int
+      +materialized: view
+    marts:
+      +enabled: true
+      +schema: marts
+      +materialized: table
+
+seeds:
+  tmdb_analytics:
+    +enabled: true
+    +schema: seed_data
+    countries:
+      +column_types:
+        iso_3166_1: char(2)
+        english_name: varchar(50)
+        native_name: varchar(5)
+    genres:
+      +column_types:
+        "id": int
+        "name": varchar(50)
+    languages:
+      +column_types:
+        iso_639_1: char(2)
+        english_name: varchar(50)
+        name: varchar(50)

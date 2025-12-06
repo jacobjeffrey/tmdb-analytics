@@ -1,0 +1,72 @@
+# fct_credits.yml
+
+version: 2
+
+models:
+  - name: fct_credits
+    description: Fact table for credits. One row per person per role per movie.
+    columns:
+      - name: credit_id
+        description: Unique identifier for a credit
+        tests:
+          - unique
+          - not_null
+
+      - name: movie_id
+        description: Unique identifier for the movie
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_movies')
+                field: movie_id
+
+      - name: person_id
+        description: Unique identifier for the person
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_people')
+                field: person_id
+
+      - name: credit_type
+        description: Credit type (cast or crew)
+        tests:
+          - not_null 
+          - accepted_values:
+              arguments:
+                values: ['Cast', 'Crew']
+
+      - name: character
+        description: Character played by the person (cast credit only)
+        tests:
+          - not_null:
+              arguments:
+                where: credit_type = 'Cast'
+
+      - name: cast_order
+        description: Order in which the person appears (cast credit only)
+        tests:
+          - not_null:
+              arguments:
+                where: credit_type = 'Cast'
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+
+      - name: job
+        description: Job performed by the person (crew credit only)
+        tests:
+          - not_null:
+              arguments:
+                where: credit_type = 'Crew'
+
+      - name: department
+        description: Department for the person's job (crew credit only)
+        tests:
+          - not_null:
+              arguments:
+                where: credit_type = 'Crew'
+              config:
+                severity: warn

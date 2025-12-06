@@ -1,0 +1,31 @@
+# bridge_movies_production_companies.yml
+
+version: 2
+
+models:
+  - name: bridge_movies_production_companies
+    description: >
+      Bridge table for movies and genres. One unique entry for each movie_id and company_id combo.
+      Derived from int_movies_production_companies_exploded.
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - movie_id
+            - company_id
+
+    columns:
+      - name: movie_id
+        description: Unique identifier for the movie
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_movies')
+              field: movie_id
+      
+      - name: company_id
+        description: Unique identifier for the company
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_production_companies')
+              field: company_id

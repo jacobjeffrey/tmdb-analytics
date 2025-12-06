@@ -1,0 +1,16 @@
+version: 2
+
+sources:
+  - name: tmdb
+    schema: raw_tmdb
+
+    
+    tables:
+      - name: movie_details_and_credits
+        description: >
+          Raw movie data from TMDB API in Parquet format. Includes all credits for each movie.
+          Source: TMDB API v3 https://api.themoviedb.org/3/movie/{movie_id} with append_to_response = "credits"
+        meta:
+          external_location: ../data/movie_details_and_credits/*.parquet
+      
+      

@@ -1,0 +1,19 @@
+# dim_countries.yml
+
+version: 2
+
+models:
+  - name: dim_countries
+    description: Dim table for countries available in the TMDB api. Derived from stg_tmdb__countries.
+    columns:
+      - name: country_code
+        description: 2-digit, uppercase ISO_3166_1 code for the country
+        tests:
+          - not_null
+          - unique
+        
+      - name: english_name
+        description: The simplified English name for a given country
+        
+      - name: native_name
+        description: The full, official English name for a given country

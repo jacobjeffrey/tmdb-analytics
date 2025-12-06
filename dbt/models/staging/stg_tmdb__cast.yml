@@ -1,0 +1,70 @@
+# stg_tmdb__cast.yml
+
+version: 2
+
+models:
+  - name: stg_tmdb__cast
+    description: >
+      Staging model that unnests the cast from the credits field (i.e. the actors in the film).
+      One unique row per credit_id
+    columns:
+      - name: credit_id
+        description: Unique identifier for a specific casting credit
+        tests:
+          - not_null
+          - unique
+
+      - name: movie_id
+        description: Unique identifier for the movie
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_tmdb__movies')
+                field: movie_id
+
+      - name: person_id
+        description: Unique identifier for the actor/actress
+        tests:
+          - not_null
+
+      - name: name
+        description: The actor/actress's name in English
+        tests:
+          - not_null
+
+      - name: original_name
+        description: The actor/actress's name represented in their native language
+
+      - name: gender
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['Female', 'Male', 'Non-binary', 'Not specified']
+
+      - name: known_for_department
+        description: The actor/actress's usual deparment (i.e. acting, directing, etc.)
+
+      - name: popularity
+        description: TMDB's popularity score, based on the number of views on a given day plus previous scores.
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between: 
+              arguments:
+                min_value: 0
+
+      - name: credit_type
+        description: The type of credit. For this model, always 'Cast'
+
+      - name: character
+        description: The character the actor/actress plays for the given casting_id
+
+      - name: cast_order
+        description: > 
+          The order in which an actor/actress appears in the credits.
+          Lower numbers often imply a more significant role
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+
+      - name: ingested_at
