@@ -99,7 +99,7 @@ Analytical queries like "revenue by genre" or "top actors by box office" are jus
 **Bridges:**
 - `bridge_movies_genres` - Movies ↔ Genres (many-to-many)
 - `bridge_movies_origin_countries` - Movies ↔ Origin Countries (many-to-many)
-- `bridge_movies_production_companies` - Movies ↔ Production Companies (many-to-many)
+- `bridge_movies_prod_companies` - Movies ↔ Production Companies (many-to-many)
 
 ![dbt lineage graph](docs/images/dbt-dag.png)
 
