@@ -4,7 +4,7 @@
 
 # What This Is
 
-This is an end-to-end analytics pipeline built around movie data from the 2000s onward. I chose this domain because I enjoy movie analytics and wanted something meaningful to practice with. The project pulls data from the TMDB API, lands raw data in Parquet, and uses dbt (DuckDB adapter) to build a clean star schema for analytics.
+This is an end-to-end analytics pipeline built around movie data from the 2000s onward. I chose this domain because I really got into movies this year and wanted to work with a domain I'm interested in. The project pulls data from the TMDB API, lands raw data in Parquet, and uses dbt (DuckDB adapter) to build a clean star schema for analytics.
 
 With this pipeline, you can run analyses such as:
 - Highest-ROI genres since the 2000s (revenue/budget)
@@ -45,17 +45,17 @@ Fetch data from TMDB API endpoints and write to local files:
 - **Movie details (with credits appended) → Parquet** - 
 Core movie metadata, genres, crew, and cast all in a single API call using append_to_response=credits.
 
-- **Discover movies → Parquet** used only to enumerate movie_ids
-- **Genres, countries, languages → CSV** - Static reference data loaded as dbt seed tables
+- **Discover movies → Parquet** used only to enumerate movie_ids for the details endpoint.
+- **Genres, countries, languages → CSV** - Static reference data loaded as dbt seed tables.
 
-The extraction uses async requests to handle tens of thousands of records efficiently while respecting TMDB's rate limit (~40 requests per second). Added retry logic with exponential backoff for timeouts and network hiccups. Implemented with asyncio/aiohttp and tenacity.
+The extraction uses async requests to increase throughput while respecting TMDB's rate limit (~40 requests per second). Added retry logic with for timeouts and network hiccups. Implemented with asyncio/aiohttp and tenacity.
 
 Parquet files are read directly by dbt via DuckDB's native Parquet support - no intermediate database loading required.
 
 
 **2. Data Transformation (dbt)**
 
-**Staging layer** - Clean and standardize raw data from the movie_details Parquet file (rename fields, fix data types, handle nulls). Three staging models extract different aspects of the mega-file: core movie metadata, credits (cast + crew combined), and nested attributes like genres/countries.
+**Staging layer** - Clean and standardize raw data from the movie_details_and_credits Parquet file (rename fields, fix data types, handle nulls). Three staging models extract different aspects of the mega-file: movie data, cast credits, and crew credits.
 
 **Intermediate layer** - Unnest JSON arrays and deduplicate entities (people, production companies, etc.). Cast and crew are combined into a unified credits structure here.
 
@@ -77,24 +77,24 @@ Building interactive dashboards to explore trends like ROI by genre, actor caree
 The project uses a **Kimball-inspired star schema** optimized for movie analytics queries.
 
 **Why star schema:**
-Analytical queries like "revenue by genre" or "top actors by box office" are just a couple of joins in a star schema vs 6-7 joins if everything was normalized. TMDB's data maps cleanly to dimensions and facts, and BI tools expect this structure.
+I chose star schema because it's the gold standard for analytics, simplying the number of joins an analyst needs to make. 3NF would require a lot more joins and is more appropriate for an app, while One Big Table might cause a row explosion with all the nested fields.
 
 **Design decisions:**
 - **Bridge tables for genres, production_companies, and origin_countries** - These many-to-many relationships are queried constantly ("best performing genres", "top studios by revenue", "films by country"), so I normalized them into proper bridge tables
 - **Unnested production companies from movie details** - TMDB's production_company endpoint was redundant with data already in movie_details, so I extracted and deduped companies directly from the nested JSON arrays in the intermediate layer
-- **JSON for spoken_languages, production_countries, and belongs_to_collection** - Kept these as JSON in `dim_movies` rather than creating another bridge table since it's rarely filtered on and would add unnecessary complexity
-- **Popularity as a snapshot** - Currently stored in `dim_people` as a point-in-time value. Since TMDB updates this metric daily, tracking it historically would be better suited to a dedicated `fct_popularity` table if I decide to implement time-series tracking
+- **JSON for spoken_languages, production_countries, and belongs_to_collection** - Kept these as JSON in `dim_movies` rather than creating another bridge table since I don't have an analytics use-case for them yet. Avoided unnesting to keep the mart small.
+- **Popularity as a snapshot** - Currently stored in `dim_people` as a point-in-time value. Might move to a dedicated fct_popularity table if I decide to track historical trends.
 
 **Key models:**
 
 **Dimensions:**
-- `dim_movies` - Core movie info: title, release date, runtime, budget, revenue, ratings
-- `dim_people` - Cast and crew: name, biography, popularity
+- `dim_movies` - Core movie info: title, release date, description, tagline
+- `dim_people` - Cast and crew name, biography, popularity
 - `dim_genres`, `dim_languages`, `dim_countries`, `dim_production_companies` - Reference data
 
 **Facts:**
-- `fct_movies` - Movie performance metrics: revenue, budget, vote counts (one row per movie)
-- `fct_credits` - Cast and crew assignments with role details (character, job title, department, cast order)
+- `fct_movies` - Movie performance metrics: revenue, budget, vote counts. One row per movie.
+- `fct_credits` - Cast and crew assignments with role details (character, job title, department, cast order). One row per unique credit.
 
 **Bridges:**
 - `bridge_movies_genres` - Movies ↔ Genres (many-to-many)
@@ -188,18 +188,18 @@ dbt docs serve     # Opens on localhost:8080
 
 ## Things I Learned / Gotchas
 
-- **Async ingestion was a game-changer** - Switching from synchronous to asynchronous fetching cut ingestion time from 2+ hours to 30 minutes. The async overhead was worth it even for "just" API calls.
+- **Async ingestion was a game-changer** - Switching from synchronous to asynchronous fetching cut ingestion time from 2+ hours to 30 minutes.
 
-- **Pragmatic trade-offs beat perfectionism** - Initially tried fetching 400k people records for accurate popularity stats (3+ hours even with async). Realized averaging existing stats was good enough. Perfect data that takes forever isn't useful.
+- **Pragmatic trade-offs beat perfectionism** - Initially tried fetching 400k people records for accurate popularity stats (3+ hours even with async). Realized averaging existing stats was good enough.
 
-- **Parquet > CSV for messy data** - TMDB's description fields are full of newlines and special characters that broke Pandas CSV parsing. Moving to Parquet eliminated an entire class of encoding headaches.
+- **Parquet > CSV for messy data** - TMDB's description fields are full of newlines and special characters that broke Pandas' CSV parsing. Moving to Parquet and DuckDB really simplified this step for me.
 
-- **RTFM saves time** - Discovered TMDB's `append_to_response` parameter halfway through the project. One parameter change cut API calls in half by fetching credits alongside movie details. Always read the docs first.
+- **RTFM saves time** - Discovered TMDB's `append_to_response` parameter halfway through the project. This allowed me to pull credits along with movie details, cutting ingestion time in half.
 
 
 ## Running This Yourself
 
-**Note:** Initial ingestion takes ~30 minutes to fetch all movie data from TMDB's API. Grab coffee while it runs.
+**Note:** Initial ingestion takes ~30 minutes to fetch all movie data from TMDB's API.
 
 **Feedback welcome!** This is a learning project and I'm always looking to improve. If you spot issues or have suggestions on the modeling, pipeline design, or code structure, feel free to open an issue or reach out.
 
