@@ -17,3 +17,4 @@ streamlit            # For your frontend dashboard
 # --- Utils ---
 tqdm
 python-dotenv
+pyyaml>=6.0

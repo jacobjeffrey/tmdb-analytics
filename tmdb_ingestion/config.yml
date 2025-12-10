@@ -1,0 +1,21 @@
+# config.yaml
+
+api:
+  discover_url: "https://api.themoviedb.org/3/discover/movie"
+  details_url: "https://api.themoviedb.org/3/movie/"
+  max_retries: 5
+  timeout: 30
+  
+ingestion:
+  start_year: 2000
+  end_year: 2025
+  batch_size: 500
+  vote_count_gte: 100
+  
+concurrency:
+  max_rate: 35
+  time_period: 1
+  semaphore_limit: 10
+
+paths:
+  data_dir: "data"
