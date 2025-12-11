@@ -5,7 +5,7 @@ with src as (
         movie_id,
         payload_json,
         ingested_at
-    from {{ source('tmdb', 'movie_details_and_credits')}}
+    from {{ source('tmdb', 'movie_details')}}
 ),
 
 -- Handle pagination quirks

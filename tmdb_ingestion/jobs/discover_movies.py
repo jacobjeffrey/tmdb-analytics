@@ -8,6 +8,7 @@ from typing import Dict, Any, List
 import aiohttp
 import pandas as pd
 from aiolimiter import AsyncLimiter
+from tqdm.asyncio import tqdm_asyncio
 
 from tmdb_ingestion.utils import (
     load_config,
@@ -33,7 +34,7 @@ def run_discover_movies(cfg: Dict[str, Any]) -> None:
 
     start_year = ingest_cfg["start_year"]
     end_year = ingest_cfg["end_year"]
-    vote_count_gte = ingest_cfg.get("vote_count_gte")  # <-- NEW: pull from config
+    vote_count_gte = ingest_cfg.get("vote_count_gte", 100)  # Default to 100 for quality
 
     data_root = Path(paths_cfg["data_dir"])
     movies_dir = data_root / "movies"
@@ -47,7 +48,7 @@ def run_discover_movies(cfg: Dict[str, Any]) -> None:
             api_cfg=api_cfg,
             conc_cfg=conc_cfg,
             movies_dir=movies_dir,
-            vote_count_gte=vote_count_gte,  # <-- NEW: pass through
+            vote_count_gte=vote_count_gte,
         )
     )
 
@@ -59,13 +60,14 @@ async def _discover_movies_for_range(
     api_cfg: Dict[str, Any],
     conc_cfg: Dict[str, Any],
     movies_dir: Path,
-    vote_count_gte: int | None = None,  # <-- NEW: parameter
+    vote_count_gte: int = 100,  # Required with sensible default
 ) -> None:
     """
     Actual async ingestion logic.
     - Loops over years
     - Calls TMDB discover endpoint with pagination
     - Writes one Parquet file per year
+    - Uses date-based filtering and sorting to avoid pagination quirks
     """
     base_url = api_cfg["discover_url"]  # e.g. https://api.themoviedb.org/3/discover/movie
 
@@ -74,21 +76,21 @@ async def _discover_movies_for_range(
 
     async with aiohttp.ClientSession() as session:
         for year in range(start_year, end_year + 1):
-            print(f"📆 Discovering movies for year {year}...")
+            print(f"Discovering movies for year {year}...")
 
             movies: List[Dict[str, Any]] = []
 
             # Base params for *all* pages for this year
+            # Use date ranges instead of year for more precise filtering
             params = {
                 "api_key": api_key,
-                "primary_release_year": year,
-                "include_adult": "false",  # NOTE: must be string, not bool
+                "primary_release_date.gte": f"{year}-01-01",
+                "primary_release_date.lte": f"{year}-12-31",
+                "include_adult": "false",  
+                "vote_count.gte": vote_count_gte,  # Filter out low quality/obscure results
+                "sort_by": "primary_release_date.asc",  # Sort to avoid pagination quirks
                 "page": 1,
             }
-
-            # 🔥 NEW: apply vote_count_gte if configured
-            if vote_count_gte is not None:
-                params["vote_count.gte"] = vote_count_gte
 
             # --- First page ---
             first_page = await fetch_api_data(
@@ -100,26 +102,34 @@ async def _discover_movies_for_range(
             )
 
             if not first_page:
-                print(f"⚠️ No data returned for year {year}, skipping.")
+                print(f"No data returned for year {year}, skipping.")
                 continue
+
+            # Defensive: check for results in first page
+            first_page_results = first_page.get("results")
+            if not first_page_results:
+                print(f"No movies found in first page for year {year}, skipping.")
+                continue
+
+            movies.extend(first_page_results)
 
             total_pages = first_page.get("total_pages", 1)
 
-            # 🔥 TMDB safeguard: Discover endpoint cannot go beyond 500 pages
+            # TMDB safeguard: Discover endpoint cannot go beyond 500 pages
             if total_pages > 500:
                 print(
-                    f"⚠️ WARNING: TMDB returned {total_pages} pages for year {year}, "
+                    f"WARNING: TMDB returned {total_pages} pages for year {year}, "
                     f"but the API only allows access to the first 500 pages. "
-                    f"Results beyond page 500 will NOT be fetched."
+                    f"Consider increasing vote_count.gte (currently {vote_count_gte}) "
+                    f"to reduce result set."
                 )
                 total_pages = 500  # clamp to TMDB's maximum
-            movies.extend(first_page.get("results", []))
 
-            # --- Remaining pages ---
+            # --- Remaining pages with progress bar ---
             if total_pages > 1:
                 page_tasks = []
                 for page in range(2, total_pages + 1):
-                    page_params = dict(params, page=page)  # inherits vote_count.gte, etc.
+                    page_params = dict(params, page=page)
                     task = fetch_api_data(
                         url=base_url,
                         session=session,
@@ -129,21 +139,33 @@ async def _discover_movies_for_range(
                     )
                     page_tasks.append(task)
 
-                page_results = await asyncio.gather(*page_tasks)
+                # Show progress bar, only keep last year's bar visible
+                leave_bar = (year == end_year)
+                page_results = await tqdm_asyncio.gather(
+                    *page_tasks,
+                    total=len(page_tasks),
+                    desc=f"Downloading pages for year {year}",
+                    leave=leave_bar,
+                )
+
+                # Defensive: check each page for results
                 for page_data in page_results:
-                    if page_data and "results" in page_data:
-                        movies.extend(page_data["results"])
+                    if not page_data:
+                        continue
+                    results = page_data.get("results")
+                    if results:
+                        movies.extend(results)
 
             if not movies:
-                print(f"⚠️ No movies found for year {year}, skipping write.")
+                print(f"No movies found for year {year}, skipping write.")
                 continue
 
             df = pd.DataFrame(movies)
             out_path = movies_dir / f"movies_{year}.parquet"
             ensure_path_exists(out_path)
-            df.to_parquet(out_path, index=False)
+            df.to_parquet(out_path, index=False, engine="pyarrow", compression="snappy")
             print(
-                f"✅ Wrote {len(df)} movies for {year} "
+                f"Wrote {len(df)} movies for {year} "
                 f"(vote_count.gte={vote_count_gte}) to {out_path}"
             )
 
@@ -156,6 +178,7 @@ def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Discover TMDB movies for a year range.")
     parser.add_argument("--start-year", type=int, help="Override start year (inclusive)")
     parser.add_argument("--end-year", type=int, help="Override end year (inclusive)")
+    parser.add_argument("--vote-count-gte", type=int, help="Override minimum vote count filter")
     return parser.parse_args()
 
 
@@ -167,5 +190,7 @@ if __name__ == "__main__":
         cfg["ingestion"]["start_year"] = args.start_year
     if args.end_year is not None:
         cfg["ingestion"]["end_year"] = args.end_year
+    if args.vote_count_gte is not None:
+        cfg["ingestion"]["vote_count_gte"] = args.vote_count_gte
 
     run_discover_movies(cfg)

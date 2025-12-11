@@ -19,3 +19,4 @@ concurrency:
 
 paths:
   data_dir: "data"
+  seeds_dir: "dbt/seeds"
