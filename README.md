@@ -18,15 +18,16 @@ These queries become straightforward because the project uses:
 - Data quality tests that catch common TMDB API issues such as missing people records or duplicated fields
 ## Current Status
 
-**What's working:** Core pipeline complete - Asynchronous API ingestion, dbt transformations with 18 models, dimensional modeling with bridge tables, comprehensive data quality tests.
+**What's working:** Core pipeline complete - Asynchronous API ingestion, dbt transformations with 18 models, dimensional modeling with bridge tables, comprehensive data quality tests. Ingestion refactored to be more modular and ready for the cloud (i.e. easily configurable for different environments).
 
-**What I'm working on:** Refactoring ingestion to be modular
+**What I'm working on:** Moving pipeline to GCP
 
-**What's next:** Either adding orchestration or migrating to GCP
+**What's next:** Orchestration, front-end (leaning towards Streamlit)
 
 ## Tech Stack
 
 - **Data Source:** [TMDB API](https://developer.themoviedb.org/docs/getting-started)
+- **Ingestion:** Python (asyncio/aiohttp) with config-driven orchestration
 - **Storage:** DuckDB
 - **Transformation:** dbt core
 - **Frontend:** (tentative) 
@@ -41,12 +42,12 @@ TMDB API → Python Extraction → Parquet/CSV → dbt (DuckDB) → Frontend
 
 **1. Data Ingestion (Python → Parquet/CSV)**
 
-Fetch data from TMDB API endpoints and write to local files:
-- **Movie details (with credits appended) → Parquet** - 
-Core movie metadata, genres, crew, and cast all in a single API call using append_to_response=credits.
+Fetch data from TMDB API endpoints and write to Parquet files:
+- **Discover movies → Parquet** - Enumerate movie IDs by year (partitioned: `movies_2024.parquet`, etc.)
+- **Movie details + credits → Parquet** - Core metadata in a single API call using `append_to_response=credits`
+- **Genres, countries, languages → CSV** - Static reference data loaded as dbt seeds
 
-- **Discover movies → Parquet** used only to enumerate movie_ids for the details endpoint.
-- **Genres, countries, languages → CSV** - Static reference data loaded as dbt seed tables.
+Configuration managed via `config.yml` for environment-specific settings (rate limits, year ranges, data paths).
 
 The extraction uses async requests to increase throughput while respecting TMDB's rate limit (~40 requests per second). Added retry logic with for timeouts and network hiccups. Implemented with asyncio/aiohttp and tenacity.
 
@@ -150,8 +151,12 @@ tmdb_analytics:
 
 **4. Run the pipeline**
 ```bash
-# Pull data from TMDB (writes to data/ directory)
-python ingestion/ingest_tmdb.py
+# Option 1: Full ingestion (uses config.yml defaults)
+python -m tmdb_ingestion.ingest_tmdb
+
+# Option 2: Incremental (just 2024)
+python -m tmdb_ingestion.jobs.discover_movies --start-year 2025 --end-year 2025
+python -m tmdb_ingestion.jobs.fetch_movie_details
 
 # Transform with dbt
 cd dbt
@@ -173,22 +178,34 @@ dbt docs serve     # Opens on localhost:8080
 ## Project Structure
 
 ```
-├── data/ 
+├── data/
+│   ├── movies/
+│   │   └── movies_*.parquet         # Partitioned by year
+│   └── movie_details/
+│       └── movie_details.parquet
 ├── dbt/
 │   ├── models/
-│   │   ├── staging/      # Staging models and tests
-│   │   ├── intermediate/ # Intermediate models and tests
-│   │   └── marts/        # Mart models (dim/fact/bridge) and tests
-│   ├── dbt_project.yml
-|   └── packages.yml
-├── ingestion/            # API Fetching
-├── frontend/             # TODO
-├── notebooks/            # Jupyter notebooks for quick EDA and data validation
-```
+│   │   ├── staging/
+│   │   ├── intermediate/
+│   │   └── marts/
+│   ├── seeds/                       # genres.csv, countries.csv, languages.csv
+│   └── dbt_project.yml
+├── tmdb_ingestion/                  # NEW: Package structure
+│   ├── jobs/
+│   │   ├── discover_movies.py
+│   │   ├── fetch_movie_details.py
+│   │   └── update_seeds.py
+│   ├── ingest_tmdb.py              # Orchestration script
+│   ├── utils.py
+│   └── config.yml                   # NEW: Centralized config
+├── notebooks/
+└── requirements.txt
 
 ## Things I Learned / Gotchas
 
 - **Async ingestion was a game-changer** - Switching from synchronous to asynchronous fetching cut ingestion time from 2+ hours to 30 minutes.
+
+- **Config-driven architecture should've been day one** - Initially hardcoded everything (year ranges, API URLs, rate limits). Every parameter change meant editing source code. Refactoring to `config.yml` with CLI overrides eliminated constant file edits and made the codebase immediately deployment-ready. Wished I'd started with this pattern from the beginning.
 
 - **Pragmatic trade-offs beat perfectionism** - Initially tried fetching 400k people records for accurate popularity stats (3+ hours even with async). Realized averaging existing stats was good enough.
 
@@ -199,7 +216,7 @@ dbt docs serve     # Opens on localhost:8080
 
 ## Running This Yourself
 
-**Note:** Initial ingestion takes ~30 minutes to fetch all movie data from TMDB's API.
+**Note:** Initial ingestion takes ~10 minutes to fetch all movie data from TMDB's API.
 
 **Feedback welcome!** This is a learning project and I'm always looking to improve. If you spot issues or have suggestions on the modeling, pipeline design, or code structure, feel free to open an issue or reach out.
 
