@@ -1,0 +1,19 @@
+services:
+  tmdb-analytics:
+    build: .
+    container_name: tmdb-analytics
+    volumes:
+      # Mount data directory to persist data
+      - ./data:/app/data
+      # Mount dbt directory for live development
+      - ./dbt:/app/dbt
+      # Mount ingestion code for live development
+      - ./tmdb_ingestion:/app/tmdb_ingestion
+    environment:
+      # Load TMDB API key from .env file
+      - TMDB_API_KEY=${TMDB_API_KEY}
+    ports:
+      # Expose dbt docs server
+      - "8080:8080"
+    stdin_open: true
+    tty: true
