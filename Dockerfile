@@ -1,34 +1,36 @@
 FROM python:3.11-slim
 
-# Set working directory
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    git \
+# Install minimal OS deps (bash for interactive dev shells; curl optional)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    bash \
     curl \
-    && rm -rf /var/lib/apt/lists/*
+  && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first for better caching
+# Create non-root user early
+RUN useradd -m appuser
+
+# Install Python deps (cache-friendly)
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-
-# Install dbt-duckdb
-RUN pip install --no-cache-dir dbt-duckdb
 
 # Copy project files
 COPY . .
 
-# Create data directory structure
-RUN mkdir -p data/movies data/movie_details data/seeds
+# Create writable dirs + set ownership for non-root runtime
+RUN mkdir -p data/movies data/movie_details data/seeds \
+  && chown -R appuser:appuser /app
 
-# Copy dbt profiles
-RUN mkdir -p /root/.dbt
-COPY profiles.yml.example /root/.dbt/profiles.yml
+# Put dbt profiles under the non-root user's home (dev default)
+RUN mkdir -p /home/appuser/.dbt \
+  && cp profiles.yml.example /home/appuser/.dbt/profiles.yml \
+  && chown -R appuser:appuser /home/appuser/.dbt
 
-# Set environment variables
 ENV PYTHONUNBUFFERED=1
-ENV DBT_PROFILES_DIR=/root/.dbt
+ENV DBT_PROFILES_DIR=/home/appuser/.dbt
 
-# Default command - opens a bash shell
-CMD ["/bin/bash"]
+USER appuser
+
+# Dev default (override in compose / Cloud Run Jobs)
+CMD ["bash"]

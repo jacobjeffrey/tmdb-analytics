@@ -3,7 +3,7 @@ tmdb_analytics:
   outputs:
     dev:
       type: duckdb
-      path: '../data/tmdb_analytics.db'
+      path: '/app/data/tmdb_analytics.db'
       threads: 4
       
       extensions:

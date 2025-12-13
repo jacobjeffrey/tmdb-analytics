@@ -1,47 +1,42 @@
-# Git files
+# Git
 .git
 .gitignore
 
-# Python cache
-__pycache__
+# Python cache / build artifacts
+__pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
+.pytest_cache/
+.mypy_cache/
 
 # Virtual environments
 venv/
 env/
 ENV/
 
-# Data files (will be mounted as volume)
-data/*.parquet
-data/*.db
-data/movies/
-data/movie_details/
+# Local data (do not bake into images)
+data/
 
 # dbt artifacts
 dbt/target/
 dbt/dbt_packages/
 dbt/logs/
 
-# IDE
+# IDE / OS
 .vscode/
 .idea/
 *.swp
 *.swo
-
-# OS
 .DS_Store
 Thumbs.db
 
-# Env files (security)
+# Secrets
 .env
-
-# Documentation
-docs/
-README.md
-*.md
-
-# Notebooks
-notebooks/
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*_service_account*.json
