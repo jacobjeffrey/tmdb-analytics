@@ -1,0 +1,21 @@
+services:
+  tmdb-analytics:
+    build: .
+    container_name: tmdb-analytics
+
+    # Local dev convenience (keeps secrets out of the image)
+    env_file:
+      - .env
+    environment:
+      - TMDB_API_KEY=${TMDB_API_KEY}
+
+    volumes:
+      - ./data:/app/data
+      - ./dbt:/app/dbt
+      - ./tmdb_ingestion:/app/tmdb_ingestion
+
+    ports:
+      - "8080:8080"
+
+    stdin_open: true
+    tty: true
