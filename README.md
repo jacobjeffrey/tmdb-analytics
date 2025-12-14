@@ -18,7 +18,7 @@ These queries become straightforward because the project uses:
 - Data quality tests that catch common TMDB API issues such as missing people records or duplicated fields
 ## Current Status
 
-**What's working:** Core pipeline complete - Asynchronous API ingestion, dbt transformations with 18 models, dimensional modeling with bridge tables, comprehensive data quality tests. Ingestion refactored to be more modular and ready for the cloud (i.e. easily configurable for different environments).
+**What's working:** Core pipeline complete - Asynchronous API ingestion, dbt transformations with 18 models, dimensional modeling with bridge tables, comprehensive data quality tests. Ingestion refactored to be more modular and ready for the cloud (i.e. easily configurable for different environments). Containerization with Docker.
 
 **What I'm working on:** Moving pipeline to GCP
 
@@ -106,77 +106,125 @@ I chose star schema because it's the gold standard for analytics, simplying the 
 
 ## Getting Started
 
-### You'll Need
+### Quick Start with Docker (Recommended)
 
-- Python 3.8+
-- dbt Core with DuckDB adapter (`pip install dbt-duckdb`)
-- A TMDB API key ([grab one here](https://www.themoviedb.org/settings/api))
+The fastest way to get up and running. No **local** Python installation or dependency management needed.
 
-### Setup
+All Docker and dbt commands are wrapped in a Makefile for convenience and consistency.
 
-**1. Clone and install**
+**Prerequisites:**
+- [Docker Desktop](https://docs.docker.com/get-docker/)
+- A TMDB API key ([get one here](https://www.themoviedb.org/settings/api))
+
+**Setup:**
 ```bash
 git clone https://github.com/jacobjeffrey/tmdb-analytics.git
 cd tmdb-analytics
+
+# Add your TMDB API key
+cp .env.example .env
+# Edit .env with your API key
+
+# Run the complete pipeline
+make init      # First-time setup (builds container and starts services)
+make pipeline  # Runs ingestion + dbt transformations
+make dbt-docs  # View documentation at http://localhost:8080
+```
+
+That’s it! 🎉
+
+**Common commands:**
+
+```bash
+make help       # See all available commands
+make shell      # Enter the running container
+make dbt-run    # Run dbt models
+make clean      # Remove containers, volumes, and local data outputs
+```
+
+➡️ **[Full Docker documentation](DOCKER_SETUP.md)** for detailed setup, troubleshooting, and advanced usage.
+
+---
+
+### Local Installation (Alternative)
+
+Prefer to run without Docker? You’ll need to manage dependencies yourself.
+
+**Prerequisites:**
+
+* Python 3.10+ (3.11 recommended)
+* dbt Core with DuckDB adapter (`pip install dbt-duckdb`)
+* A TMDB API key ([get one here](https://www.themoviedb.org/settings/api))
+
+**Setup:**
+
+1. **Clone and install**
+
+```bash
+git clone https://github.com/jacobjeffrey/tmdb-analytics.git
+cd tmdb-analytics
+
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+
 pip install -r requirements.txt
 ```
 
-**2. Environment config**
+2. **Configure environment**
+
 ```bash
 cp .env.example .env
 # Edit .env with your TMDB API key
 ```
 
-**3. Configure dbt**
+3. **Configure dbt**
 
 Copy the example profiles file:
+
 ```bash
 cp profiles.yml.example ~/.dbt/profiles.yml
 ```
 
-Or manually create `~/.dbt/profiles.yml`:
+> This step is **only required when running locally without Docker**.
+> Docker users do not need to create a local dbt profile.
+
+Example profile:
+
 ```yaml
 tmdb_analytics:
   target: dev
   outputs:
     dev:
       type: duckdb
-      path: '../data/tmdb_analytics.db'
+      path: "{{ env_var('DUCKDB_PATH', 'data/tmdb_analytics.db') }}"
       threads: 4
-      
       extensions:
         - parquet
         - httpfs
 ```
 
-**4. Run the pipeline**
+4. **Run the pipeline**
+
 ```bash
-# Option 1: Full ingestion (uses config.yml defaults)
 python -m tmdb_ingestion.ingest_tmdb
 
-# Option 2: Incremental (just 2024)
-python -m tmdb_ingestion.jobs.discover_movies --start-year 2025 --end-year 2025
-python -m tmdb_ingestion.jobs.fetch_movie_details
-
-# Transform with dbt
 cd dbt
-dbt deps           # Install dbt packages (utils and expectations)
-dbt seed           # Load reference data (genres, languages, countries)
-dbt run            # Build models
-dbt test           # Run data quality tests
+dbt deps
+dbt seed
+dbt run
+dbt test
 
-# Check out the docs
 dbt docs generate
-dbt docs serve     # Opens on localhost:8080
+dbt docs serve
 ```
 
 **What gets created:**
-- `data/tmdb_analytics.db` - DuckDB database with all transformed models
-- `data/*.parquet` - Raw movie and movie_details data
-- `data/seeds/*.csv` - Reference data for genres, languages, countries
+
+* `data/tmdb_analytics.db` — DuckDB analytics database
+* `data/*.parquet` — Raw and intermediate data
+* `data/seeds/*.csv` — Reference data (genres, languages, countries)
 
 ## Project Structure
-
 ```
 ├── data/
 │   ├── movies/
@@ -200,10 +248,11 @@ dbt docs serve     # Opens on localhost:8080
 │   └── config.yml                   # NEW: Centralized config
 ├── notebooks/
 └── requirements.txt
+```
 
 ## Things I Learned / Gotchas
 
-- **Async ingestion was a game-changer** - Switching from synchronous to asynchronous fetching cut ingestion time from 2+ hours to 30 minutes.
+- **Async ingestion was a game-changer** - When I was less aggressive with my movie filtering, switching from synchronous to asynchronous fetching cut ingestion time from 2+ hours to 30 minutes.
 
 - **Config-driven architecture should've been day one** - Initially hardcoded everything (year ranges, API URLs, rate limits). Every parameter change meant editing source code. Refactoring to `config.yml` with CLI overrides eliminated constant file edits and made the codebase immediately deployment-ready. Wished I'd started with this pattern from the beginning.
 
@@ -216,7 +265,7 @@ dbt docs serve     # Opens on localhost:8080
 
 ## Running This Yourself
 
-**Note:** Initial ingestion takes ~10 minutes to fetch all movie data from TMDB's API.
+**Note:** Initial ingestion takes ~10 minutes to fetch all movie data from TMDB's API with the movie vote count threshold of 100. I found this is the sweet spot for filtering out low quality/obscure results while retaining more niche/arthouse films.
 
 **Feedback welcome!** This is a learning project and I'm always looking to improve. If you spot issues or have suggestions on the modeling, pipeline design, or code structure, feel free to open an issue or reach out.
 
