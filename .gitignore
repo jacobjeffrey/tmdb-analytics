@@ -9,3 +9,20 @@ logs/
 notebooks/.ipynb_checkpoints/
 __pycache__/
 .vscode
+keys/
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+*.tfvars
+*.tfvars.json
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
+# Added: prevent accidental commit of binary plans
+*.tfplan
