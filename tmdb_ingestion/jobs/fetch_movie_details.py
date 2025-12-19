@@ -34,6 +34,7 @@ def run_movie_details(cfg: Dict[str, Any]) -> None:
     ingest_cfg = cfg["ingestion"]
     conc_cfg = cfg["concurrency"]
     paths_cfg = cfg["paths"]
+    storage_cfg = cfg.get("storage", {})
 
     batch_size = ingest_cfg.get("batch_size", 500)
 
@@ -58,6 +59,7 @@ def run_movie_details(cfg: Dict[str, Any]) -> None:
             conc_cfg=conc_cfg,
             details_dir=details_dir,
             batch_size=batch_size,
+            storage_cfg=storage_cfg,
         )
     )
 
@@ -69,6 +71,7 @@ async def _fetch_details_and_credits(
     conc_cfg: Dict[str, Any],
     details_dir: Path,
     batch_size: int = 500,
+    storage_cfg: Dict[str, Any] = None,
 ) -> None:
     """
     Fetch movie details and credits for all discovered movies.
@@ -76,11 +79,17 @@ async def _fetch_details_and_credits(
     - Fetches in batches with streaming writes
     - Writes to single Parquet file with append mode
     """
+    if storage_cfg is None:
+        storage_cfg = {}
+    
     base_url = api_cfg["details_url"]  # e.g. https://api.themoviedb.org/3/movie/
+    append_to_response = api_cfg.get("append_to_response", "credits")
+    timeout = api_cfg.get("timeout", 30)
+    compression = storage_cfg.get("compression", "snappy")
 
     params = {
         "api_key": api_key,
-        "append_to_response": "credits",  # Include cast/crew in response
+        "append_to_response": append_to_response,  # Include cast/crew in response
     }
 
     limiter = AsyncLimiter(conc_cfg["max_rate"], conc_cfg["time_period"])
@@ -127,6 +136,7 @@ async def _fetch_details_and_credits(
                     semaphore=semaphore,
                     limiter=limiter,
                     movie_id=movie_id,
+                    timeout=timeout,
                 )
                 tasks.append(task)
 
@@ -148,7 +158,7 @@ async def _fetch_details_and_credits(
                 writer = pq.ParquetWriter(
                     output_file,
                     table.schema,
-                    compression="snappy",
+                    compression=compression,
                 )
 
             writer.write_table(table)
@@ -168,6 +178,7 @@ async def _fetch_with_metadata(
     semaphore: asyncio.Semaphore,
     limiter: AsyncLimiter,
     movie_id: int,
+    timeout: int = 30,
 ) -> Dict[str, Any]:
     """
     Fetch a single movie's details/credits and wrap with metadata.
@@ -178,6 +189,7 @@ async def _fetch_with_metadata(
         params=params,
         semaphore=semaphore,
         limiter=limiter,
+        timeout=timeout,
     )
 
     return {

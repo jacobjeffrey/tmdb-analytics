@@ -28,13 +28,14 @@ def run_discover_movies(cfg: Dict[str, Any]) -> None:
     api_key = get_api_key()
 
     api_cfg = cfg["api"]             # e.g. base URL, endpoints
-    ingest_cfg = cfg["ingestion"]    # start_year, end_year, batch_size, vote_count_gte
+    discover_cfg = cfg["discover"]   # start_year, end_year, vote_count_gte, filters
     conc_cfg = cfg["concurrency"]    # rate limit / semaphore limits
     paths_cfg = cfg["paths"]         # data_dir, etc.
+    storage_cfg = cfg.get("storage", {})  # compression, engine settings
 
-    start_year = ingest_cfg["start_year"]
-    end_year = ingest_cfg["end_year"]
-    vote_count_gte = ingest_cfg.get("vote_count_gte", 100)  # Default to 100 for quality
+    start_year = discover_cfg["start_year"]
+    end_year = discover_cfg["end_year"]
+    vote_count_gte = discover_cfg.get("vote_count_gte", 100)  # Default to 100 for quality
 
     data_root = Path(paths_cfg["data_dir"])
     movies_dir = data_root / "movies"
@@ -46,9 +47,11 @@ def run_discover_movies(cfg: Dict[str, Any]) -> None:
             end_year=end_year,
             api_key=api_key,
             api_cfg=api_cfg,
+            discover_cfg=discover_cfg,
             conc_cfg=conc_cfg,
             movies_dir=movies_dir,
             vote_count_gte=vote_count_gte,
+            storage_cfg=storage_cfg,
         )
     )
 
@@ -58,9 +61,11 @@ async def _discover_movies_for_range(
     end_year: int,
     api_key: str,
     api_cfg: Dict[str, Any],
+    discover_cfg: Dict[str, Any],
     conc_cfg: Dict[str, Any],
     movies_dir: Path,
     vote_count_gte: int = 100,  # Required with sensible default
+    storage_cfg: Dict[str, Any] = None,
 ) -> None:
     """
     Actual async ingestion logic.
@@ -69,10 +74,25 @@ async def _discover_movies_for_range(
     - Writes one Parquet file per year
     - Uses date-based filtering and sorting to avoid pagination quirks
     """
+    if storage_cfg is None:
+        storage_cfg = {}
+    
     base_url = api_cfg["discover_url"]  # e.g. https://api.themoviedb.org/3/discover/movie
 
     limiter = AsyncLimiter(conc_cfg["max_rate"], conc_cfg["time_period"])
     semaphore = asyncio.Semaphore(conc_cfg["semaphore_limit"])
+
+    # Get discover config values
+    include_adult = discover_cfg.get("include_adult", False)
+    sort_by = discover_cfg.get("sort_by", "primary_release_date.asc")
+    max_pages = discover_cfg.get("max_pages", 500)
+    
+    # Get storage config values
+    compression = storage_cfg.get("compression", "snappy")
+    engine = storage_cfg.get("engine", "pyarrow")
+    
+    # Get API timeout
+    timeout = api_cfg.get("timeout", 30)
 
     async with aiohttp.ClientSession() as session:
         for year in range(start_year, end_year + 1):
@@ -86,9 +106,9 @@ async def _discover_movies_for_range(
                 "api_key": api_key,
                 "primary_release_date.gte": f"{year}-01-01",
                 "primary_release_date.lte": f"{year}-12-31",
-                "include_adult": "false",  
+                "include_adult": str(include_adult).lower(),
                 "vote_count.gte": vote_count_gte,  # Filter out low quality/obscure results
-                "sort_by": "primary_release_date.asc",  # Sort to avoid pagination quirks
+                "sort_by": sort_by,  # Sort to avoid pagination quirks
                 "page": 1,
             }
 
@@ -99,6 +119,7 @@ async def _discover_movies_for_range(
                 params=params,
                 semaphore=semaphore,
                 limiter=limiter,
+                timeout=timeout,
             )
 
             if not first_page:
@@ -115,15 +136,15 @@ async def _discover_movies_for_range(
 
             total_pages = first_page.get("total_pages", 1)
 
-            # TMDB safeguard: Discover endpoint cannot go beyond 500 pages
-            if total_pages > 500:
+            # TMDB safeguard: Discover endpoint cannot go beyond max_pages
+            if total_pages > max_pages:
                 print(
                     f"WARNING: TMDB returned {total_pages} pages for year {year}, "
-                    f"but the API only allows access to the first 500 pages. "
+                    f"but the API only allows access to the first {max_pages} pages. "
                     f"Consider increasing vote_count.gte (currently {vote_count_gte}) "
                     f"to reduce result set."
                 )
-                total_pages = 500  # clamp to TMDB's maximum
+                total_pages = max_pages  # clamp to TMDB's maximum
 
             # --- Remaining pages with progress bar ---
             if total_pages > 1:
@@ -136,6 +157,7 @@ async def _discover_movies_for_range(
                         params=page_params,
                         semaphore=semaphore,
                         limiter=limiter,
+                        timeout=timeout,
                     )
                     page_tasks.append(task)
 
@@ -163,7 +185,7 @@ async def _discover_movies_for_range(
             df = pd.DataFrame(movies)
             out_path = movies_dir / f"movies_{year}.parquet"
             ensure_path_exists(out_path)
-            df.to_parquet(out_path, index=False, engine="pyarrow", compression="snappy")
+            df.to_parquet(out_path, index=False, engine=engine, compression=compression)
             print(
                 f"Wrote {len(df)} movies for {year} "
                 f"(vote_count.gte={vote_count_gte}) to {out_path}"
@@ -187,10 +209,10 @@ if __name__ == "__main__":
     args = _parse_args()
 
     if args.start_year is not None:
-        cfg["ingestion"]["start_year"] = args.start_year
+        cfg["discover"]["start_year"] = args.start_year
     if args.end_year is not None:
-        cfg["ingestion"]["end_year"] = args.end_year
+        cfg["discover"]["end_year"] = args.end_year
     if args.vote_count_gte is not None:
-        cfg["ingestion"]["vote_count_gte"] = args.vote_count_gte
+        cfg["discover"]["vote_count_gte"] = args.vote_count_gte
 
     run_discover_movies(cfg)

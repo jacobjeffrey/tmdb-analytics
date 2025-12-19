@@ -85,12 +85,12 @@ if __name__ == "__main__":
     
     # Apply CLI overrides
     if args.start_year is not None:
-        cfg["ingestion"]["start_year"] = args.start_year
+        cfg["discover"]["start_year"] = args.start_year
     if args.end_year is not None:
-        cfg["ingestion"]["end_year"] = args.end_year
+        cfg["discover"]["end_year"] = args.end_year
     if args.batch_size is not None:
         cfg["ingestion"]["batch_size"] = args.batch_size
     if args.vote_count_gte is not None:
-        cfg["ingestion"]["vote_count_gte"] = args.vote_count_gte
+        cfg["discover"]["vote_count_gte"] = args.vote_count_gte
     
     run_full_ingestion(cfg)

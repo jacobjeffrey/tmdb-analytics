@@ -1,22 +1,55 @@
-# config.yaml
+# TMDB Ingestion Configuration
+# This file centralizes all configuration for the TMDB data ingestion pipeline.
+# Values can be overridden via CLI arguments in individual job scripts.
 
 api:
+  # Base API endpoints
+  base_url: "https://api.themoviedb.org/3"
   discover_url: "https://api.themoviedb.org/3/discover/movie"
   details_url: "https://api.themoviedb.org/3/movie/"
-  max_retries: 5
-  timeout: 30
+  genres_url: "https://api.themoviedb.org/3/genre/movie/list"
+  countries_url: "https://api.themoviedb.org/3/configuration/countries"
+  languages_url: "https://api.themoviedb.org/3/configuration/languages"
   
-ingestion:
+  # Request settings
+  timeout: 30  # seconds
+  max_retries: 5
+  
+  # Movie details endpoint parameters
+  append_to_response: "credits"  # Include cast/crew in movie details response
+
+# Discover endpoint filtering and sorting
+discover:
+  # Filter parameters
+  include_adult: false
+  vote_count_gte: 100  # Minimum vote count to filter out low-quality/obscure results
+  sort_by: "primary_release_date.asc"  # Sort to avoid pagination quirks
+  
+  # Year range for discovery (can be overridden via CLI)
   start_year: 2000
   end_year: 2025
-  batch_size: 500
-  vote_count_gte: 100
   
-concurrency:
-  max_rate: 35
-  time_period: 1
-  semaphore_limit: 10
+  # TMDB API limitation: discover endpoint only allows access to first 500 pages
+  max_pages: 500
 
+# Ingestion pipeline settings
+ingestion:
+  # Batch processing
+  batch_size: 500  # Number of movies to fetch per batch in details job
+
+# Concurrency and rate limiting
+concurrency:
+  max_rate: 35  # Maximum requests per time_period
+  time_period: 1  # Time period in seconds for rate limiting
+  semaphore_limit: 10  # Maximum concurrent requests
+
+# Storage settings
+storage:
+  compression: "snappy"  # Parquet compression algorithm (snappy, gzip, brotli, zstd)
+  engine: "pyarrow"  # Parquet engine
+
+# File paths
 paths:
   data_dir: "data"
   seeds_dir: "dbt/seeds"
+

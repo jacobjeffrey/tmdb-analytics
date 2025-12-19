@@ -24,12 +24,12 @@ resource "google_storage_bucket" "raw" {
   # Good practice: Include region in the resource if it differs from provider default, 
   # but here we can rely on the provider or set it explicitly:
   name     = "tmdb-raw-${random_id.bucket_prefix.hex}"
-  location = "US" 
+  location = var.region
 }
 
 resource "google_bigquery_dataset" "tmdb" {
   dataset_id = "tmdb_analytics"
-  location   = "US"
+  location   = var.region
 }
 
 resource "google_service_account" "pipeline" {

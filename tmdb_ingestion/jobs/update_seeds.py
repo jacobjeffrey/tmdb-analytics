@@ -26,6 +26,7 @@ def run_update_seeds(cfg: Dict[str, Any]) -> None:
     """
     api_key = get_api_key()
 
+    api_cfg = cfg["api"]
     paths_cfg = cfg["paths"]
     seeds_dir = Path(paths_cfg["seeds_dir"])
     ensure_path_exists(seeds_dir)
@@ -37,9 +38,9 @@ def run_update_seeds(cfg: Dict[str, Any]) -> None:
     session = requests.Session()
     params = {"api_key": api_key}
 
-    genres_url = "https://api.themoviedb.org/3/genre/movie/list"
-    countries_url = "https://api.themoviedb.org/3/configuration/countries"
-    languages_url = "https://api.themoviedb.org/3/configuration/languages"
+    genres_url = api_cfg["genres_url"]
+    countries_url = api_cfg["countries_url"]
+    languages_url = api_cfg["languages_url"]
 
     print(f"Updating seed files in {seeds_dir.resolve()}")
 

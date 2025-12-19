@@ -66,12 +66,24 @@ def serialize_json(data):
     retry=retry_if_exception_type((aiohttp.ClientError, asyncio.TimeoutError)),
     before_sleep = notify_before_retry
 )
-async def fetch_api_data(url, session, params, semaphore, limiter, serialize=False):
-    timeout = aiohttp.ClientTimeout(total=30)  # 30 second total timeout
+async def fetch_api_data(url, session, params, semaphore, limiter, serialize=False, timeout=30):
+    """
+    Fetch data from API with retry logic.
+    
+    Args:
+        url: API endpoint URL
+        session: aiohttp ClientSession
+        params: Query parameters dict
+        semaphore: asyncio.Semaphore for concurrency control
+        limiter: AsyncLimiter for rate limiting
+        serialize: Whether to serialize JSON fields
+        timeout: Request timeout in seconds (default: 30)
+    """
+    client_timeout = aiohttp.ClientTimeout(total=timeout)
     
     async with semaphore:
         async with limiter:
-            async with session.get(url, params=params, timeout=timeout) as response:
+            async with session.get(url, params=params, timeout=client_timeout) as response:
                 try:
                     response.raise_for_status()
                     try:
