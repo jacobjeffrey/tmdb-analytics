@@ -48,8 +48,30 @@ storage:
   compression: "snappy"  # Parquet compression algorithm (snappy, gzip, brotli, zstd)
   engine: "pyarrow"  # Parquet engine
 
-# File paths
-paths:
-  data_dir: "data"
-  seeds_dir: "dbt/seeds"
+# Filesystem abstraction settings
+filesystem:
+  # One of: local | gcs
+  backend: "gcs"
 
+  # Local settings (used when backend: local)
+  local:
+    # Root directory for data outputs (movies/, movie_details/, etc.)
+    data_dir: "data"
+    # Root directory for seed outputs (genres.csv, countries.csv, languages.csv)
+    seeds_dir: "dbt/seeds"
+
+  # GCS settings (used when backend: gcs)
+  gcs:
+    # Bucket to read/write ingestion artifacts.
+    bucket: "tmdb-raw-a01ee0853f0cdfea"
+    # Optional path prefix inside the bucket (no leading slash).
+    # Example: "tmdb/ingestion" -> gs://your-bucket-name/tmdb/ingestion/
+    prefix: "tmdb_ingestion"
+    # Optional: explicitly set a project for clients that need it.
+    project: null
+    # Authentication strategy.
+    # - "adc": Application Default Credentials (recommended)
+    # - "service_account": load from a key file
+    auth:
+      method: "adc"
+      service_account_json: null

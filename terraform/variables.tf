@@ -8,3 +8,8 @@ variable "region" {
   type        = string
   default     = "us-west1" # Defaults let you skip defining this every time
 }
+
+variable "dev_user_email" {
+  description = "Personal email for local development permissions (ADC)"
+  type        = string
+}

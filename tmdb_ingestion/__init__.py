@@ -22,7 +22,8 @@ from .utils import (
     get_api_key,
     fetch_api_data,
     chunked,
-    ensure_path_exists,
+    ensure_dir_exists,
+    ensure_parent_exists,
 )
 
 __all__ = [
@@ -30,7 +31,8 @@ __all__ = [
     "get_api_key",
     "fetch_api_data",
     "chunked",
-    "ensure_path_exists",
+    "ensure_dir_exists",
+    "ensure_parent_exists",
 ]
 
 # Optional: version placeholder if you ever package this

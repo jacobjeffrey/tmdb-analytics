@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import argparse
 import csv
-from pathlib import Path
 from typing import Dict, Any
 
 import pandas as pd
@@ -11,29 +10,35 @@ import requests
 from tmdb_ingestion.utils import (
     load_config,
     get_api_key,
-    ensure_path_exists,
+    get_filesystem,
+    get_seeds_dir_path,
+    build_fs_path,
+    ensure_dir_exists,
 )
 
 
 def run_update_seeds(cfg: Dict[str, Any]) -> None:
     """
     Public job entrypoint (sync).
-
-    - Reads TMDB API key
-    - Uses paths from config to determine seeds directory
     - Fetches genres, countries, and languages from TMDB
-    - Writes them to CSV files in the seeds directory
+    - Writes them to CSV files using the configured filesystem
     """
     api_key = get_api_key()
 
     api_cfg = cfg["api"]
-    paths_cfg = cfg["paths"]
-    seeds_dir = Path(paths_cfg["seeds_dir"])
-    ensure_path_exists(seeds_dir)
+    
+    # --- Filesystem Setup ---
+    fs = get_filesystem(cfg)
+    seeds_dir_str = get_seeds_dir_path(cfg)
+    
+    # Ensure seeds directory exists
+    # If GCS, this might be the first time we write to this prefix
+    seeds_dir = build_fs_path(cfg, seeds_dir_str)
+    ensure_dir_exists(seeds_dir, fs=fs)
 
-    genres_csv = seeds_dir / "genres.csv"
-    countries_csv = seeds_dir / "countries.csv"
-    languages_csv = seeds_dir / "languages.csv"
+    genres_csv = build_fs_path(cfg, seeds_dir, "genres.csv")
+    countries_csv = build_fs_path(cfg, seeds_dir, "countries.csv")
+    languages_csv = build_fs_path(cfg, seeds_dir, "languages.csv")
 
     session = requests.Session()
     params = {"api_key": api_key}
@@ -42,46 +47,42 @@ def run_update_seeds(cfg: Dict[str, Any]) -> None:
     countries_url = api_cfg["countries_url"]
     languages_url = api_cfg["languages_url"]
 
-    print(f"Updating seed files in {seeds_dir.resolve()}")
+    print(f"Updating seed files in {seeds_dir}")
+
+    # Helper to write dataframe to fs
+    def write_csv(df: pd.DataFrame, path: str, name: str):
+        # fs.open() creates a file-like object (works for Local or GCS)
+        with fs.open(path, "w") as f:
+            df.to_csv(f, index=False, quoting=csv.QUOTE_ALL)
+        print(f"Wrote {name} to {path}")
 
     # Genres
     genres_response = session.get(genres_url, params=params)
     genres_response.raise_for_status()
     genres_data = genres_response.json().get("genres", [])
-    df = pd.DataFrame(genres_data)
-    df.to_csv(genres_csv, index=False, quoting=csv.QUOTE_ALL)
-    print(f"Wrote genres to {genres_csv}")
+    write_csv(pd.DataFrame(genres_data), genres_csv, "genres")
 
     # Countries
     countries_response = session.get(countries_url, params=params)
     countries_response.raise_for_status()
     countries_data = countries_response.json()
-    df = pd.DataFrame(countries_data)
-    df.to_csv(countries_csv, index=False, quoting=csv.QUOTE_ALL)
-    print(f"Wrote countries to {countries_csv}")
+    write_csv(pd.DataFrame(countries_data), countries_csv, "countries")
 
     # Languages
     languages_response = session.get(languages_url, params=params)
     languages_response.raise_for_status()
     languages_data = languages_response.json()
-    df = pd.DataFrame(languages_data)
-    df.to_csv(languages_csv, index=False, quoting=csv.QUOTE_ALL)
-    print(f"Wrote languages to {languages_csv}")
+    write_csv(pd.DataFrame(languages_data), languages_csv, "languages")
 
 
 def _parse_args() -> argparse.Namespace:
-    """
-    CLI parser for this job.
-    Mostly here for symmetry with other jobs; you can add flags later if needed.
-    """
     parser = argparse.ArgumentParser(
         description="Update TMDB seed CSVs (genres, countries, languages)."
     )
-    # e.g. you could add --seeds-dir override in the future.
     return parser.parse_args()
 
 
 if __name__ == "__main__":
     cfg = load_config()
-    _ = _parse_args()  # currently unused, but keeps the pattern consistent
+    _ = _parse_args()
     run_update_seeds(cfg)

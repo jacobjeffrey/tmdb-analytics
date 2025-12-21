@@ -2,6 +2,7 @@
 dbt-duckdb>=1.8.0    # Replaces dbt-postgres & psycopg2
 duckdb>=1.0.0        # The embedded OLAP database
 pyarrow>=14.0.0      # CRITICAL: Enables writing/reading Parquet files
+gcsfs>=2025.12.0    # Google Cloud Storage filesystem support
 
 # --- Ingestion & Data ---
 pandas>=2.0.0        # Dataframes
@@ -18,3 +19,4 @@ streamlit            # For your frontend dashboard
 tqdm
 python-dotenv
 pyyaml>=6.0
+fsspec>=2025.12.0    # Filesystem abstraction for cloud storage

@@ -8,11 +8,16 @@ services:
       - .env
     environment:
       - TMDB_API_KEY=${TMDB_API_KEY}
+      - GOOGLE_APPLICATION_CREDENTIALS=/tmp/keys/application_default_credentials.json
+      - GCS_BUCKET_NAME=${GCS_BUCKET_NAME}
+
+
 
     volumes:
       - ./data:/app/data
       - ./dbt:/app/dbt
       - ./tmdb_ingestion:/app/tmdb_ingestion
+      - ~/.config/gcloud/application_default_credentials.json:/tmp/keys/application_default_credentials.json:ro
 
     ports:
       - "8080:8080"
