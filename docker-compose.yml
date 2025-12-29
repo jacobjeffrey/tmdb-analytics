@@ -3,15 +3,10 @@ services:
     build: .
     container_name: tmdb-analytics
 
-    # Local dev convenience (keeps secrets out of the image)
     env_file:
       - .env
     environment:
-      - TMDB_API_KEY=${TMDB_API_KEY}
       - GOOGLE_APPLICATION_CREDENTIALS=/tmp/keys/application_default_credentials.json
-      - GCS_BUCKET_NAME=${GCS_BUCKET_NAME}
-
-
 
     volumes:
       - ./data:/app/data

@@ -1,11 +1,31 @@
 tmdb_analytics:
-  target: dev
+  target: dev_duckdb
+
   outputs:
-    dev:
+    dev_duckdb:
       type: duckdb
-      path: '/app/data/tmdb_analytics.db'
+      path: "/app/data/tmdb_analytics.db"
       threads: 4
-      
       extensions:
         - parquet
         - httpfs
+
+    dev_bq:
+      type: bigquery
+      method: oauth
+      project: "{{ env_var('GCP_PROJECT_ID') }}"
+      dataset: "tmdb_analytics_dev"
+      location: "{{ env_var('BQ_LOCATION') or 'US' }}"
+      threads: 4
+      timeout_seconds: 300
+
+    prod:
+      type: bigquery
+      method: service-account
+      project: "{{ env_var('GCP_PROJECT_ID') }}"
+      dataset: "tmdb_analytics"
+      location: "{{ env_var('BQ_LOCATION') or 'US' }}"
+      keyfile_json: "{{ env_var('GCP_KEYFILE_JSON') }}"
+      threads: 4
+      timeout_seconds: 300
+      priority: batch
