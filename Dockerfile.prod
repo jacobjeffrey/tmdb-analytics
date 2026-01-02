@@ -1,0 +1,22 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    bash curl git \
+  && rm -rf /var/lib/apt/lists/*
+
+RUN useradd -m appuser
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+ENV DBT_PROFILES_DIR=/home/appuser/.dbt
+RUN mkdir -p /home/appuser/.dbt \
+  && cp profiles.yml.example /home/appuser/.dbt/profiles.yml \
+  && chown -R appuser:appuser /app /home/appuser/.dbt
+
+USER appuser
+CMD ["dbt", "run"]

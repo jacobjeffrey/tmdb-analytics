@@ -1,21 +1,21 @@
 services:
   tmdb-analytics:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
     container_name: tmdb-analytics
 
     env_file:
       - .env
+
     environment:
       - GOOGLE_APPLICATION_CREDENTIALS=/tmp/keys/application_default_credentials.json
+      - DBT_PROFILES_DIR=/home/appuser/.dbt
 
     volumes:
-      - ./data:/app/data
-      - ./dbt:/app/dbt
-      - ./tmdb_ingestion:/app/tmdb_ingestion
+      - .:/app
+      - ~/.dbt:/home/appuser/.dbt
       - ~/.config/gcloud/application_default_credentials.json:/tmp/keys/application_default_credentials.json:ro
-
-    ports:
-      - "8080:8080"
 
     stdin_open: true
     tty: true
