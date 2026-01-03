@@ -1,11 +1,11 @@
--- stg_tmdb__movies.sql
+-- models/staging/stg_tmdb__movies.sql
 
 with src as (
     select
         movie_id,
         payload_json,
         ingested_at
-    from {{ source('tmdb', 'movies')}}
+    from {{ source('tmdb', 'movies') }}
 ),
 
 -- Handle pagination quirks
@@ -15,12 +15,11 @@ deduped as (
         payload_json as p,
         ingested_at
     from src
-    QUALIFY row_number() over (
-        partition by movie_id 
+    qualify row_number() over (
+        partition by movie_id
         order by ingested_at desc
     ) = 1
 )
-
 
 select
     -- Primary key
@@ -35,24 +34,24 @@ select
 
     -- Important dimensions
     p.status,
-    p.release_date::date AS release_date,
-    lower(p.original_language) AS original_language,
-    p.adult::boolean AS adult,
+    safe_cast(p.release_date as date) as release_date,
+    lower(p.original_language) as original_language,
+    safe_cast(p.adult as bool) as adult,
 
     -- Key metrics
-    p.revenue::bigint AS revenue,
-    p.budget::integer AS budget,
-    p.runtime::integer AS runtime,
-    p.popularity::double AS popularity,
-    p.vote_average::double AS vote_average,
-    p.vote_count::bigint AS vote_count,
+    safe_cast(p.revenue as int64) as revenue,
+    safe_cast(p.budget as int64) as budget,
+    safe_cast(p.runtime as int64) as runtime,
+    safe_cast(p.popularity as float64) as popularity,
+    safe_cast(p.vote_average as float64) as vote_average,
+    safe_cast(p.vote_count as int64) as vote_count,
 
     -- Descriptive content
     p.overview,
     p.tagline,
     p.homepage,
 
-    -- Complex/JSON
+    -- Complex/JSON (keep as-is; still RECORD/ARRAY types)
     p.belongs_to_collection,
     p.genres,
     p.origin_country,
@@ -61,7 +60,7 @@ select
     p.spoken_languages,
 
     -- Boolean flags
-    p.video::boolean AS video,
+    safe_cast(p.video as bool) as video,
 
     -- Media paths
     p.backdrop_path,

@@ -1,11 +1,11 @@
--- stg_tmdb__crew.sql
+-- models/staging/stg_tmdb__crew.sql
 
 with src as (
     select
         movie_id,
         payload_json,
         ingested_at
-    from {{ source('tmdb', 'movies')}}
+    from {{ source('tmdb', 'movies') }}
 ),
 
 -- Handle pagination quirks
@@ -15,19 +15,20 @@ deduped as (
         payload_json as p,
         ingested_at
     from src
-    QUALIFY row_number() over (
-        partition by movie_id 
+    qualify row_number() over (
+        partition by movie_id
         order by ingested_at desc
     ) = 1
 ),
 
--- Unnest crew
+-- Unnest crew (BigQuery: UNNEST in FROM; DuckDB->BQ wrapper uses .list + .element)
 unnested_crew as (
     select
-        movie_id,
-        unnest(p.credits.crew) as c,
-        ingested_at
-    from deduped
+        d.movie_id,
+        c_row.element as c,
+        d.ingested_at
+    from deduped d
+    cross join unnest(d.p.credits.crew.list) as c_row
 )
 
 select
@@ -36,13 +37,12 @@ select
 
     -- Movie grain
     movie_id,
-    
 
     -- Person details
     c.id as person_id,
     c.name,
     c.original_name,
-    case 
+    case
         when c.gender = 1 then 'Female'
         when c.gender = 2 then 'Male'
         when c.gender = 3 then 'Non-binary'
@@ -56,8 +56,6 @@ select
     c.job,
     c.department,
 
-
     -- Auditing
     ingested_at
 from unnested_crew
-

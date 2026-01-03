@@ -1,5 +1,5 @@
 tmdb_analytics:
-  target: dev_duckdb
+  target: dev_bq
 
   outputs:
     dev_duckdb:
