@@ -9,9 +9,10 @@ with source as (
 
 unnested as (
     select
-        movie_id,
-        unnest(origin_country) as origin_country_code
-    from source
+        s.movie_id,
+        oc.element as origin_country_code
+    from source as s
+    cross join unnest(ifnull(s.origin_country.list, [])) as oc
 )
 
 select

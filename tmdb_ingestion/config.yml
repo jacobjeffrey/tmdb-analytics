@@ -27,7 +27,7 @@ discover:
   
   # Year range for discovery (can be overridden via CLI)
   start_year: 2000
-  end_year: 2025
+  end_year: 2026
   
   # TMDB API limitation: discover endpoint only allows access to first 500 pages
   max_pages: 500
