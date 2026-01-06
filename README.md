@@ -2,6 +2,7 @@
 
 > An end-to-end analytics engineering platform featuring TMDB API data.
 
+
 # What This Is
 
 This is an end-to-end analytics pipeline built around movie data from the 2000s onward. I chose this domain because I really got into movies this year and wanted to work with a domain I'm interested in. The project pulls data from the TMDB API, lands raw data in Parquet, and uses dbt (DuckDB adapter) to build a clean star schema for analytics.
@@ -18,26 +19,35 @@ These queries become straightforward because the project uses:
 - Data quality tests that catch common TMDB API issues such as missing people records or duplicated fields
 ## Current Status
 
-**What's working:** Core pipeline complete - Asynchronous API ingestion, dbt transformations with 18 models, dimensional modeling with bridge tables, comprehensive data quality tests. Ingestion refactored to be more modular and ready for the cloud (i.e. easily configurable for different environments). Containerization with Docker.
+**What's working:** Core pipeline complete - Asynchronous API ingestion, dbt transformations with 18 models, dimensional modeling with bridge tables, comprehensive data quality tests. Ingestion refactored to be more modular and ready for the cloud (i.e. easily configurable for different environments). Containerization with Docker. **GCP deployment ready** – BigQuery-compatible dbt models and Terraform-provisioned GCP infrastructure (GCS, BigQuery, IAM). Orchestration coming next. Pipeline supports both local (DuckDB) and cloud (BigQuery) execution.
 
-**What I'm working on:** Moving pipeline to GCP
+**What I'm working on:** Front-end (leaning towards Streamlit)
 
-**What's next:** Orchestration, front-end (leaning towards Streamlit)
+**What's next:** Cloud orchestration (Cloud Run/Cloud Functions)
 
 ## Tech Stack
 
 - **Data Source:** [TMDB API](https://developer.themoviedb.org/docs/getting-started)
 - **Ingestion:** Python (asyncio/aiohttp) with config-driven orchestration
-- **Storage:** DuckDB
-- **Transformation:** dbt core
+- **Storage:** DuckDB (local) | Google Cloud Storage + BigQuery (cloud)
+- **Transformation:** dbt core (DuckDB and BigQuery adapters)
+- **Infrastructure:** Terraform (GCP resources)
+- **Containerization:** Docker (dev and prod images)
 - **Frontend:** (tentative) 
 
 
 ## How It Works
 
 This is a straightforward ELT pipeline: extract from TMDB API, load raw data into Parquet/CSV, transform with dbt, and visualize in a frontend (Rill, Tableau, etc).
+
+**Local Development:**
 ```
 TMDB API → Python Extraction → Parquet/CSV → dbt (DuckDB) → Frontend
+```
+
+**Cloud Deployment (GCP):**
+```
+TMDB API → Python Extraction → GCS (Parquet) → dbt (BigQuery) → Frontend
 ```
 
 **1. Data Ingestion (Python → Parquet/CSV)**
@@ -51,7 +61,7 @@ Configuration managed via `config.yml` for environment-specific settings (rate l
 
 The extraction uses async requests to increase throughput while respecting TMDB's rate limit (~40 requests per second). Added retry logic with for timeouts and network hiccups. Implemented with asyncio/aiohttp and tenacity.
 
-Parquet files are read directly by dbt via DuckDB's native Parquet support - no intermediate database loading required.
+Parquet files are read directly by dbt via DuckDB's native Parquet support (local) or loaded into BigQuery (cloud) - no intermediate database loading required for local development.
 
 
 **2. Data Transformation (dbt)**
@@ -121,7 +131,7 @@ All Docker and dbt commands are wrapped in a Makefile for convenience and consis
 git clone https://github.com/jacobjeffrey/tmdb-analytics.git
 cd tmdb-analytics
 
-# Add your TMDB API key
+# Add your TMDB API key. GCP variables are only required if running against BigQuery.
 cp .env.example .env
 # Edit .env with your API key
 
@@ -143,6 +153,92 @@ make clean      # Remove containers, volumes, and local data outputs
 ```
 
 ➡️ **[Full Docker documentation](DOCKER_SETUP.md)** for detailed setup, troubleshooting, and advanced usage.
+
+---
+
+### GCP Deployment
+
+The pipeline is fully configured for Google Cloud Platform deployment with Terraform infrastructure provisioning.
+
+**Prerequisites:**
+- [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) installed and authenticated
+- A GCP project with billing enabled
+- Terraform installed (`brew install terraform` or [download](https://www.terraform.io/downloads))
+
+**Setup:**
+
+1. **Provision infrastructure with Terraform:**
+
+```bash
+cd terraform
+
+# Initialize Terraform
+terraform init
+
+# Review the plan (customize variables as needed)
+terraform plan \
+  -var="project_id=your-gcp-project-id" \
+  -var="region=us-central1" \
+  -var="dev_user_email=your-email@example.com"
+
+# Apply infrastructure
+terraform apply
+```
+
+This creates:
+- GCS bucket for raw data storage
+- BigQuery dataset (`tmdb_analytics`)
+- Service account with appropriate IAM permissions
+- IAM bindings for your dev user
+
+2. **Configure environment variables:**
+
+```bash
+# Get outputs from Terraform
+export GCS_BUCKET_NAME=$(terraform output -raw gcs_bucket_name)
+export GCP_PROJECT_ID=$(terraform output -raw project_id)  # Or set manually
+export BQ_LOCATION="us-central1"  # Match your region
+
+# For production/service account auth
+export GCP_KEYFILE_JSON='{"type":"service_account",...}'  # Service account key JSON
+```
+
+3. **Update ingestion config for GCS:**
+
+Edit `tmdb_ingestion/config.yml`:
+```yaml
+filesystem:
+  backend: "gcs"  # Change from "local" to "gcs"
+  gcs:
+    bucket: "your-bucket-name"  # From terraform output
+    prefix: "tmdb_ingestion"    # Optional prefix
+    auth:
+      type: "oauth"  # or "service-account" for production
+```
+
+4. **Run the pipeline:**
+
+```bash
+# Using Docker (recommended)
+make pipeline  # Uses dev_bq target by default
+
+# Or locally
+python -m tmdb_ingestion.ingest_tmdb
+cd dbt
+dbt deps
+dbt seed --target dev_bq
+dbt run --target dev_bq
+dbt test --target dev_bq
+```
+
+**Production deployment:**
+
+Use the production Dockerfile with service account authentication:
+```bash
+docker build -f Dockerfile.prod -t tmdb-analytics:prod .
+docker run -e GCP_KEYFILE_JSON='...' -e GCP_PROJECT_ID='...' tmdb-analytics:prod
+```
+
 
 ---
 
@@ -218,11 +314,17 @@ dbt docs generate
 dbt docs serve
 ```
 
-**What gets created:**
+**What gets created (local):**
 
 * `data/tmdb_analytics.db` — DuckDB analytics database
 * `data/*.parquet` — Raw and intermediate data
 * `data/seeds/*.csv` — Reference data (genres, languages, countries)
+
+**What gets created (GCP):**
+
+* GCS bucket with Parquet files — Raw data storage
+* BigQuery dataset with tables — Transformed analytics models
+* Service account — For automated pipeline execution
 
 ## Project Structure
 ```
@@ -238,14 +340,21 @@ dbt docs serve
 │   │   └── marts/
 │   ├── seeds/                       # genres.csv, countries.csv, languages.csv
 │   └── dbt_project.yml
-├── tmdb_ingestion/                  # NEW: Package structure
+├── tmdb_ingestion/                  # Package structure
 │   ├── jobs/
 │   │   ├── discover_movies.py
 │   │   ├── fetch_movie_details.py
 │   │   └── update_seeds.py
 │   ├── ingest_tmdb.py              # Orchestration script
 │   ├── utils.py
-│   └── config.yml                   # NEW: Centralized config
+│   └── config.yml                   # Centralized config (supports local/GCS)
+├── terraform/                       # GCP infrastructure as code
+│   ├── main.tf                      # GCS bucket, BigQuery dataset, IAM
+│   └── variables.tf                 # Configurable variables
+├── Dockerfile.dev                   # Development container
+├── Dockerfile.prod                  # Production container (BigQuery)
+├── docker-compose.yml               # Local development setup
+├── Makefile                         # Convenience commands
 ├── notebooks/
 └── requirements.txt
 ```
@@ -262,6 +371,10 @@ dbt docs serve
 
 - **RTFM saves time** - Discovered TMDB's `append_to_response` parameter halfway through the project. This allowed me to pull credits along with movie details, cutting ingestion time in half.
 
+- **BigQuery migration required SQL dialect changes** - Refactored all dbt models from DuckDB to BigQuery syntax (e.g., `UNNEST` in FROM clause, `STRUCT` types, `ARRAY_AGG`). The staging layer uses BigQuery-native functions while maintaining compatibility with the same data model structure.
+
+- **Terraform for infrastructure** - Provisioning GCP resources (GCS, BigQuery, IAM) as code eliminated manual setup and ensures consistent environments. The config-driven ingestion pipeline seamlessly switches between local and GCS backends based on configuration.
+
 
 ## Running This Yourself
 
@@ -272,6 +385,6 @@ dbt docs serve
 ## Credits
 
 This product uses the TMDB API but is not endorsed or certified by TMDB.
-
 ![The Movie Database (TMDB)](docs/images/tmdb-logo.svg)
+
 ---
