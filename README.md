@@ -40,7 +40,9 @@ These queries become straightforward because the project uses:
 
 This is a straightforward ELT pipeline: extract from TMDB API, load raw data into Parquet/CSV, transform with dbt, and visualize in a frontend (Rill, Tableau, etc).
 
-![Local vs Cloud Pipeline](docs/images/pipeline-local-vs-cloud.png)
+<p align="center">
+  <img src="docs/images/pipeline-local-vs-cloud.png" width="700" alt="Local vs Cloud Pipeline">
+</p>
 
 **1. Data Ingestion (Python → Parquet/CSV)**
 
@@ -80,7 +82,7 @@ Building interactive dashboards to explore trends like ROI by genre, actor caree
 The project uses a **Kimball-inspired star schema** optimized for movie analytics queries.
 
 <p align="center">
-  <img src="docs/images/marts-diagram.png" width="800" alt="Analytics star schema">
+  <img src="docs/images/marts-diagram.png" width="700" alt="Analytics star schema">
 </p>
 
 **Why star schema:**
@@ -108,7 +110,9 @@ I chose star schema because it's the gold standard for analytics, simplying the 
 - `bridge_movies_origin_countries` - Movies ↔ Origin Countries (many-to-many)
 - `bridge_movies_prod_companies` - Movies ↔ Production Companies (many-to-many)
 
-![dbt lineage graph](docs/images/dbt-dag.png)
+<p align="center">
+  <img src="docs/images/dbt-dag.png" width="700" alt="dbt lineage graph">
+</p>
 
 ## Getting Started
 
