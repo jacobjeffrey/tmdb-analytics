@@ -40,15 +40,7 @@ These queries become straightforward because the project uses:
 
 This is a straightforward ELT pipeline: extract from TMDB API, load raw data into Parquet/CSV, transform with dbt, and visualize in a frontend (Rill, Tableau, etc).
 
-**Local Development:**
-```
-TMDB API → Python Extraction → Parquet/CSV → dbt (DuckDB) → Frontend
-```
-
-**Cloud Deployment (GCP):**
-```
-TMDB API → Python Extraction → GCS (Parquet) → dbt (BigQuery) → Frontend
-```
+![Local vs Cloud Pipeline](docs/images/pipeline-local-vs-cloud.png)
 
 **1. Data Ingestion (Python → Parquet/CSV)**
 
@@ -86,6 +78,10 @@ Building interactive dashboards to explore trends like ROI by genre, actor caree
 ## Data Models
 
 The project uses a **Kimball-inspired star schema** optimized for movie analytics queries.
+
+<p align="center">
+  <img src="docs/images/marts-diagram.png" width="800" alt="Analytics star schema">
+</p>
 
 **Why star schema:**
 I chose star schema because it's the gold standard for analytics, simplying the number of joins an analyst needs to make. 3NF would require a lot more joins and is more appropriate for an app, while One Big Table might cause a row explosion with all the nested fields.

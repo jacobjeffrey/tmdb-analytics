@@ -1,0 +1,98 @@
+// DBML generated from dbt marts models
+
+Table dim_movies {
+  movie_id int [pk, note: "TMDB movie id"]
+  imdb_id varchar [note: "IMDB id (if available)"]
+  title varchar [note: "Localized title"]
+  original_title varchar [note: "Original title"]
+  status varchar [note: "Release status"]
+  release_date date [note: "Release date"]
+  original_language varchar [note: "ISO 639-1 code"]
+  overview text [note: "Plot summary"]
+  tagline varchar [note: "Tagline"]
+  homepage varchar [note: "Official homepage URL"]
+  belongs_to_collection json [note: "Collection info JSON"]
+  backdrop_path varchar [note: "Backdrop image path"]
+  poster_path varchar [note: "Poster image path"]
+}
+
+Table dim_genres {
+  genre_id int [pk, note: "Unique identifier for the genre"]
+  name varchar [note: "Genre name"]
+}
+
+Table dim_languages {
+  language_code varchar [pk, note: "ISO 639-1 code"]
+  english_name varchar [note: "Language name in English"]
+  native_name varchar [note: "Language name in native script"]
+}
+
+Table dim_countries {
+  country_code varchar [pk, note: "ISO 3166-1 alpha 2 code"]
+  english_name varchar [note: "Country name in English"]
+  native_name varchar [note: "Country name in native script"]
+}
+
+Table dim_companies {
+  company_id int [pk, note: "Unique identifier for the company"]
+  company_name varchar [note: "Company name"]
+  origin_country varchar [note: "ISO 3166-1 alpha 2 code"]
+  logo_path varchar [note: "Company logo path"]
+}
+
+Table dim_people {
+  person_id int [pk, note: "Unique identifier for the person"]
+  name varchar [note: "Name in English"]
+  original_name varchar [note: "Name in native language"]
+  gender varchar [note: "TMDB reported gender"]
+  known_for_department varchar [note: "Typical department"]
+  popularity numeric [note: "Popularity score"]
+}
+
+Table fct_movies {
+  movie_id int [pk, note: "Unique identifier for the movie"]
+  revenue numeric [note: "Revenue in USD"]
+  budget numeric [note: "Budget in USD"]
+  runtime int [note: "Runtime in minutes"]
+  popularity numeric [note: "TMDB popularity score"]
+  vote_average numeric [note: "Average user rating"]
+  vote_count int [note: "Number of user votes"]
+}
+
+Table fct_credits {
+  credit_id varchar [pk, note: "Unique identifier for a credit"]
+  movie_id int [note: "Unique identifier for the movie"]
+  person_id int [note: "Unique identifier for the person"]
+  credit_type varchar [note: "Cast or Crew"]
+  character varchar [note: "Character name (cast)"]
+  cast_order int [note: "Order in cast list"]
+  job varchar [note: "Job (crew)"]
+  department varchar [note: "Department (crew)"]
+}
+
+Table bridge_movies_genres {
+  movie_id int [note: "Unique identifier for the movie"]
+  genre_id int [note: "Unique identifier for the genre"]
+}
+
+Table bridge_movies_prod_companies {
+  movie_id int [note: "Unique identifier for the movie"]
+  company_id int [note: "Unique identifier for the company"]
+}
+
+Table bridge_movies_origin_countries {
+  movie_id int [note: "Unique identifier for the movie"]
+  origin_country_code varchar [note: "ISO 3166-1 alpha 2 code"]
+}
+
+Ref: dim_movies.original_language > dim_languages.language_code
+Ref: dim_companies.origin_country > dim_countries.country_code
+Ref: fct_movies.movie_id > dim_movies.movie_id
+Ref: fct_credits.movie_id > dim_movies.movie_id
+Ref: fct_credits.person_id > dim_people.person_id
+Ref: bridge_movies_genres.movie_id > dim_movies.movie_id
+Ref: bridge_movies_genres.genre_id > dim_genres.genre_id
+Ref: bridge_movies_prod_companies.movie_id > dim_movies.movie_id
+Ref: bridge_movies_prod_companies.company_id > dim_companies.company_id
+Ref: bridge_movies_origin_countries.movie_id > dim_movies.movie_id
+Ref: bridge_movies_origin_countries.origin_country_code > dim_countries.country_code
