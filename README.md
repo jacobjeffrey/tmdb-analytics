@@ -203,12 +203,12 @@ export BQ_LOCATION="us-central1"  # Match your region
 export GCP_KEYFILE_JSON='{"type":"service_account",...}'  # Service account key JSON
 ```
 
-3. **Update ingestion config for GCS:**
+3. **Confirm ingestion config for GCS:**
 
 Edit `tmdb_ingestion/config.yml`:
 ```yaml
 filesystem:
-  backend: "gcs"  # Change from "local" to "gcs"
+  backend: "gcs"
   gcs:
     bucket: "your-bucket-name"  # From terraform output
     prefix: "tmdb_ingestion"    # Optional prefix
@@ -318,7 +318,7 @@ dbt docs serve
 
 * `data/tmdb_analytics.db` — DuckDB analytics database
 * `data/*.parquet` — Raw and intermediate data
-* `data/seeds/*.csv` — Reference data (genres, languages, countries)
+* `dbt/seeds/*.csv` — Reference data (genres, languages, countries)
 
 **What gets created (GCP):**
 
