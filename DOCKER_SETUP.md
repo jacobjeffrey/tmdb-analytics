@@ -1,6 +1,6 @@
 # Docker Setup for TMDB Analytics
 
-This guide provides detailed Docker setup instructions for the TMDB Analytics project. For a quick start, see the [README.md](README.md) which uses the recommended Makefile workflow. The default ingestion configuration writes to the local filesystem; you can switch to GCS when you want to run against cloud storage.
+This guide provides detailed Docker setup instructions for the TMDB Analytics project. For a quick start, see the [README.md](README.md) which uses the recommended Makefile workflow. The default ingestion configuration is cloud-first (GCS + BigQuery); you can switch to local storage for local development.
 
 ## Prerequisites
 
@@ -8,7 +8,7 @@ This guide provides detailed Docker setup instructions for the TMDB Analytics pr
 - [Docker Compose](https://docs.docker.com/compose/install/) (included with Docker Desktop)
 - A TMDB API key ([get one here](https://www.themoviedb.org/settings/api))
 
-## Recommended: Using Makefile (Quick Start)
+## Recommended: Using Makefile (Quick Start, Cloud-First)
 
 The easiest way to get started is using the Makefile, which wraps all Docker commands:
 
@@ -17,12 +17,12 @@ The easiest way to get started is using the Makefile, which wraps all Docker com
 git clone https://github.com/jacobjeffrey/tmdb-analytics.git
 cd tmdb-analytics
 cp .env.example .env
-# Edit .env with your TMDB API key
+# Edit .env with your TMDB API key and GCP settings
 
 # First-time setup
 make init      # Builds container and starts services
 
-# Run the complete pipeline
+# Run the complete pipeline (BigQuery)
 make pipeline  # Runs ingestion + dbt transformations
 
 # View documentation
@@ -86,9 +86,9 @@ dbt docs generate
 dbt docs serve --host 0.0.0.0
 ```
 
-**Optional: switch ingestion to GCS**
+**Optional: confirm ingestion uses GCS (default)**
 
-By default, ingestion writes to the local filesystem. To use GCS, edit `tmdb_ingestion/config.yml`:
+By default, ingestion writes to GCS. To verify or update, edit `tmdb_ingestion/config.yml`:
 ```yaml
 filesystem:
   backend: "gcs"
@@ -98,7 +98,24 @@ filesystem:
     auth:
       method: "oauth"  # or "service_account" for production
 ```
-To return to local storage, set `filesystem.backend: "local"` and keep the `local` paths below.
+To switch to local storage, set `filesystem.backend: "local"` and keep the `local` paths below.
+
+**Local Development (DuckDB)**
+
+For local development, switch the filesystem backend and run dbt against DuckDB:
+```yaml
+# tmdb_ingestion/config.yml
+filesystem:
+  backend: "local"
+  local:
+    data_dir: "data"
+    seeds_dir: "dbt/seeds"
+```
+
+```bash
+export DBT_TARGET=dev_duckdb
+make pipeline
+```
 
 **6. View dbt docs in your browser**
 
@@ -131,7 +148,7 @@ docker compose run --rm tmdb-analytics python -m tmdb_ingestion.jobs.discover_mo
 The `data/` directory is mounted as a volume, so your data persists even when you stop/remove containers:
 - `data/*.parquet` - Raw API data
 - `data/tmdb_analytics.db` - DuckDB database
-- `data/seeds/*.csv` - Reference data
+- `dbt/seeds/*.csv` - Reference data
 
 ## Development Workflow
 

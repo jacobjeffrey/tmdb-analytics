@@ -5,7 +5,7 @@
 
 # What This Is
 
-This is an end-to-end analytics pipeline built around movie data from the 2000s onward. I chose this domain because I really got into movies this year and wanted to work with a domain I'm interested in. The project pulls data from the TMDB API, lands raw data in Parquet, and uses dbt (DuckDB adapter) to build a clean star schema for analytics. The default configuration targets local storage; you can switch to GCS for cloud runs.
+This is an end-to-end analytics pipeline built around movie data from the 2000s onward. I chose this domain because I really got into movies this year and wanted to work with a domain I'm interested in. The project pulls data from the TMDB API, lands raw data in Parquet, and uses dbt to build a clean star schema for analytics. The default configuration targets GCS + BigQuery; local DuckDB is supported for fast iteration and development.
 
 With this pipeline, you can run analyses such as:
 - Highest-ROI genres since the 2000s (revenue/budget)
@@ -19,7 +19,7 @@ These queries become straightforward because the project uses:
 - Data quality tests that catch common TMDB API issues such as missing people records or duplicated fields
 ## Current Status
 
-**What's working:** Core pipeline complete - Asynchronous API ingestion, dbt transformations with 18 models, dimensional modeling with bridge tables, comprehensive data quality tests. Ingestion refactored to be more modular and ready for the cloud (i.e. easily configurable for different environments). Containerization with Docker. **GCP deployment ready** – BigQuery-compatible dbt models and Terraform-provisioned GCP infrastructure (GCS, BigQuery, IAM). Orchestration coming next. Pipeline supports both local (DuckDB) and cloud (BigQuery) execution.
+**What's working:** Core pipeline complete - Asynchronous API ingestion, dbt transformations with 18 models, dimensional modeling with bridge tables, comprehensive data quality tests. Ingestion refactored to be more modular and ready for the cloud (i.e. easily configurable for different environments). Containerization with Docker. **GCP deployment ready** – BigQuery-compatible dbt models and Terraform-provisioned GCP infrastructure (GCS, BigQuery, IAM). Orchestration coming next. Pipeline supports both cloud (BigQuery) and local (DuckDB) execution.
 
 **What I'm working on:** Front-end (leaning towards Streamlit)
 
@@ -51,7 +51,7 @@ Fetch data from TMDB API endpoints and write to Parquet files:
 - **Movie details + credits → Parquet** - Core metadata in a single API call using `append_to_response=credits`
 - **Genres, countries, languages → CSV** - Static reference data loaded as dbt seeds
 
-Configuration managed via `config.yml` for environment-specific settings (rate limits, year ranges, data paths). The default config uses the local filesystem; switch the backend to GCS for cloud storage (see GCP section below).
+Configuration managed via `config.yml` for environment-specific settings (rate limits, year ranges, data paths). The default config uses GCS; switch the backend to local for local storage (see Local Development section below).
 
 The extraction uses async requests to increase throughput while respecting TMDB's rate limit (~40 requests per second). Added retry logic with for timeouts and network hiccups. Implemented with asyncio/aiohttp and tenacity.
 
@@ -116,7 +116,7 @@ I chose star schema because it's the gold standard for analytics, simplying the 
 
 ## Getting Started
 
-### Quick Start with Docker (Recommended)
+### Quick Start with Docker (Cloud-First, Recommended)
 
 The fastest way to get up and running. No **local** Python installation or dependency management needed.
 
@@ -131,11 +131,11 @@ All Docker and dbt commands are wrapped in a Makefile for convenience and consis
 git clone https://github.com/jacobjeffrey/tmdb-analytics.git
 cd tmdb-analytics
 
-# Add your TMDB API key. GCP variables are only required if running against BigQuery.
+# Add your TMDB API key and GCP settings for BigQuery.
 cp .env.example .env
 # Edit .env with your API key
 
-# Run the complete pipeline
+# Run the complete pipeline (BigQuery)
 make init      # First-time setup (builds container and starts services)
 make pipeline  # Runs ingestion + dbt transformations
 make dbt-docs  # View documentation at http://localhost:8080
@@ -205,7 +205,7 @@ export GCP_KEYFILE_JSON='{"type":"service_account",...}'  # Service account key 
 
 3. **Switch ingestion config to GCS (optional):**
 
-By default, ingestion writes to the local filesystem. To use GCS, edit `tmdb_ingestion/config.yml`:
+By default, ingestion writes to GCS. To double-check or update, edit `tmdb_ingestion/config.yml`:
 ```yaml
 filesystem:
   backend: "gcs"
@@ -215,7 +215,7 @@ filesystem:
     auth:
       method: "oauth"  # or "service_account" for production
 ```
-If you want to revert to local storage, set `filesystem.backend: "local"` and keep the `local` paths below.
+If you want to switch to local storage, set `filesystem.backend: "local"` and keep the `local` paths below.
 
 4. **Run the pipeline:**
 
@@ -389,3 +389,37 @@ This product uses the TMDB API but is not endorsed or certified by TMDB.
 ![The Movie Database (TMDB)](docs/images/tmdb-logo.svg)
 
 ---
+### Local Development (DuckDB)
+
+Local development uses DuckDB and the local filesystem. You have two changes to make:
+
+1. **Switch ingestion to local filesystem** in `tmdb_ingestion/config.yml`:
+```yaml
+filesystem:
+  backend: "local"
+  local:
+    data_dir: "data"
+    seeds_dir: "dbt/seeds"
+```
+
+2. **Run dbt against DuckDB**:
+```bash
+# Optional: set the local target explicitly
+export DBT_TARGET=dev_duckdb
+
+# Run the pipeline (local)
+make pipeline
+```
+
+If you prefer to set the default in `profiles.yml`, change the `target` to `dev_duckdb`.
+
+---
+
+### dbt Model Portability Notes (BigQuery vs DuckDB)
+
+To support both BigQuery and DuckDB, the dbt models include minor syntax adjustments:
+- **Casting:** `safe_cast(... as type)` in BigQuery vs `::type` in DuckDB.
+- **UNNEST behavior:** BigQuery uses `cross join unnest(...)` and array access via `.list`/`.element` in the DuckDB-to-BQ compatibility layer.
+- **Identifiers:** reserved keywords (like `order`) use backticks in BigQuery.
+
+If you update models, keep these differences in mind to maintain cross-warehouse compatibility.
