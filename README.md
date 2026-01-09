@@ -5,7 +5,7 @@
 
 # What This Is
 
-This is an end-to-end analytics pipeline built around movie data from the 2000s onward. I chose this domain because I really got into movies this year and wanted to work with a domain I'm interested in. The project pulls data from the TMDB API, lands raw data in Parquet, and uses dbt (DuckDB adapter) to build a clean star schema for analytics.
+This is an end-to-end analytics pipeline built around movie data from the 2000s onward. I chose this domain because I really got into movies this year and wanted to work with a domain I'm interested in. The project pulls data from the TMDB API, lands raw data in Parquet, and uses dbt (DuckDB adapter) to build a clean star schema for analytics. The default configuration targets local storage; you can switch to GCS for cloud runs.
 
 With this pipeline, you can run analyses such as:
 - Highest-ROI genres since the 2000s (revenue/budget)
@@ -51,7 +51,7 @@ Fetch data from TMDB API endpoints and write to Parquet files:
 - **Movie details + credits → Parquet** - Core metadata in a single API call using `append_to_response=credits`
 - **Genres, countries, languages → CSV** - Static reference data loaded as dbt seeds
 
-Configuration managed via `config.yml` for environment-specific settings (rate limits, year ranges, data paths).
+Configuration managed via `config.yml` for environment-specific settings (rate limits, year ranges, data paths). The default config uses the local filesystem; switch the backend to GCS for cloud storage (see GCP section below).
 
 The extraction uses async requests to increase throughput while respecting TMDB's rate limit (~40 requests per second). Added retry logic with for timeouts and network hiccups. Implemented with asyncio/aiohttp and tenacity.
 
@@ -203,9 +203,9 @@ export BQ_LOCATION="us-central1"  # Match your region
 export GCP_KEYFILE_JSON='{"type":"service_account",...}'  # Service account key JSON
 ```
 
-3. **Confirm ingestion config for GCS:**
+3. **Switch ingestion config to GCS (optional):**
 
-Edit `tmdb_ingestion/config.yml`:
+By default, ingestion writes to the local filesystem. To use GCS, edit `tmdb_ingestion/config.yml`:
 ```yaml
 filesystem:
   backend: "gcs"
@@ -213,8 +213,9 @@ filesystem:
     bucket: "your-bucket-name"  # From terraform output
     prefix: "tmdb_ingestion"    # Optional prefix
     auth:
-      type: "oauth"  # or "service-account" for production
+      method: "oauth"  # or "service_account" for production
 ```
+If you want to revert to local storage, set `filesystem.backend: "local"` and keep the `local` paths below.
 
 4. **Run the pipeline:**
 

@@ -1,6 +1,6 @@
 # Docker Setup for TMDB Analytics
 
-This guide provides detailed Docker setup instructions for the TMDB Analytics project. For a quick start, see the [README.md](README.md) which uses the recommended Makefile workflow.
+This guide provides detailed Docker setup instructions for the TMDB Analytics project. For a quick start, see the [README.md](README.md) which uses the recommended Makefile workflow. The default ingestion configuration writes to the local filesystem; you can switch to GCS when you want to run against cloud storage.
 
 ## Prerequisites
 
@@ -85,6 +85,20 @@ dbt test
 dbt docs generate
 dbt docs serve --host 0.0.0.0
 ```
+
+**Optional: switch ingestion to GCS**
+
+By default, ingestion writes to the local filesystem. To use GCS, edit `tmdb_ingestion/config.yml`:
+```yaml
+filesystem:
+  backend: "gcs"
+  gcs:
+    bucket: "your-bucket-name"
+    prefix: "tmdb_ingestion"
+    auth:
+      method: "oauth"  # or "service_account" for production
+```
+To return to local storage, set `filesystem.backend: "local"` and keep the `local` paths below.
 
 **6. View dbt docs in your browser**
 

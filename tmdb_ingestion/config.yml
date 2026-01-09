@@ -51,7 +51,7 @@ storage:
 # Filesystem abstraction settings
 filesystem:
   # One of: local | gcs
-  backend: "gcs"
+  backend: "local"
 
   # Local settings (used when backend: local)
   local:
@@ -63,7 +63,7 @@ filesystem:
   # GCS settings (used when backend: gcs)
   gcs:
     # Bucket to read/write ingestion artifacts.
-    bucket: "tmdb-raw-a01ee0853f0cdfea"
+    bucket: "your-gcs-bucket"
     # Optional path prefix inside the bucket (no leading slash).
     # Example: "tmdb/ingestion" -> gs://your-bucket-name/tmdb/ingestion/
     prefix: "tmdb_ingestion"
