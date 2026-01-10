@@ -189,8 +189,8 @@ sudo chown -R $USER:$USER data/
 ```
 
 **Port 8080 already in use:**
-The dbt docs server runs inside the container. If you need to change the port, you can:
-- Use make dbt-docs (recommended) which runs the docs server bound to 0.0.0.0. The port mapping is defined in docker-compose.yml
+The dbt docs server runs inside the container and is exposed on port 8080. If you need to change the port, you can:
+- Update the port mapping in `docker-compose.yml`
 - Or manually expose a different port when running `dbt docs serve` inside the container
 
 ## Alternative: Using Dockerfile Only
