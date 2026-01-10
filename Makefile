@@ -1,7 +1,7 @@
 SHELL := /bin/bash
 DC ?= docker compose
 
-.PHONY: help build up down restart logs shell clean ingest ingest-2024 ingest-seeds \
+.PHONY: help build up down restart logs shell clean ingest ingest-2026 ingest-seeds \
         dbt-deps dbt-seed dbt-run dbt-test dbt-docs dbt-clean pipeline init rebuild check
 
 # Default target
@@ -10,32 +10,48 @@ help:
 	@echo "===================================="
 	@echo ""
 	@echo "Setup & Control:"
-	@echo "  make build          Build Docker image"
-	@echo "  make up             Start containers in background"
-	@echo "  make down           Stop and remove containers"
-	@echo "  make restart        Restart containers"
-	@echo "  make logs           View container logs"
-	@echo "  make shell          Enter container shell"
-	@echo "  make clean          Remove containers, volumes, and data"
+	@echo "  make build              Build Docker image"
+	@echo "  make up                 Start containers in background"
+	@echo "  make down               Stop and remove containers"
+	@echo "  make restart            Restart containers"
+	@echo "  make logs               View container logs"
+	@echo "  make shell              Enter container shell"
+	@echo "  make clean              Remove containers, volumes, and data"
 	@echo ""
 	@echo "Data Pipeline:"
-	@echo "  make ingest         Run full TMDB data ingestion (~10 min)"
-	@echo "  make ingest-2024    Ingest only 2024 data (faster)"
-	@echo "  make ingest-seeds   Update seed data (genres, countries, languages)"
-	@echo "  make dbt-deps       Install dbt packages"
-	@echo "  make dbt-seed       Load reference data (genres, countries, etc.)"
-	@echo "  make dbt-run        Run dbt transformations"
-	@echo "  make dbt-test       Run dbt data quality tests"
-	@echo "  make dbt-docs       Generate and serve dbt docs (port 8080)"
-	@echo "  make pipeline       Run complete pipeline (ingest + dbt)"
+	@echo "  make ingest             Run full TMDB data ingestion (~10 min)"
+	@echo "  make ingest-2026        Ingest only 2026 data (faster)"
+	@echo "  make ingest-seeds       Update seed data (genres, countries, languages)"
+	@echo ""
+	@echo "dbt (Transformations):"
+	@echo "  make dbt-deps           Install dbt packages"
+	@echo "  make dbt-seed           Load reference seed data"
+	@echo "  make dbt-run            Run all dbt models"
+	@echo "  make dbt-run-staging    Run staging models only"
+	@echo "  make dbt-run-intermediate Run intermediate models only"
+	@echo "  make dbt-run-marts      Run marts models only"
+	@echo "  make dbt-test           Run dbt tests"
+	@echo "  make dbt-docs           Generate and serve dbt docs (port 8080)"
+	@echo "  make dbt-clean          Clean dbt artifacts"
+	@echo ""
+	@echo "Model Selection (advanced):"
+	@echo "  make dbt-run SEL=dim_movies"
+	@echo "  make dbt-run SEL=+path:models/marts     (marts + dependencies)"
+	@echo "  make dbt-run SEL=path:models/staging    (staging only)"
+	@echo "  make dbt-run SEL=tag:daily EXC=tag:slow"
+	@echo ""
+	@echo "Pipelines:"
+	@echo "  make pipeline           Run ingest + dbt (all models)"
+	@echo "  make pipeline SEL=+path:models/marts    (marts only)"
 	@echo ""
 	@echo "Development:"
-	@echo "  make init           First-time setup (build + up)"
-	@echo "  make rebuild        Clean rebuild from scratch"
+	@echo "  make init               First-time setup (build + up)"
+	@echo "  make rebuild            Clean rebuild from scratch"
+	@echo "  make check              Check running containers"
 	@echo ""
 	@echo "Config:"
-	@echo "  DC=<command>        Override compose command (default: 'docker compose')"
-	@echo "                     e.g., make DC=docker-compose up"
+	@echo "  DC=<command>            Override compose command (default: 'docker compose')"
+	@echo "                          e.g., make DC=docker-compose up"
 
 # Setup & Control
 build:
@@ -74,9 +90,9 @@ ingest:
 	@echo "Running full TMDB data ingestion (this takes ~10 minutes)..."
 	$(DC) exec tmdb-analytics python -m tmdb_ingestion.ingest_tmdb
 
-ingest-2024:
-	@echo "Ingesting 2024 movies only..."
-	$(DC) exec tmdb-analytics python -m tmdb_ingestion.jobs.discover_movies --start-year 2024 --end-year 2024
+ingest-2026:
+	@echo "Ingesting 2026 movies only..."
+	$(DC) exec tmdb-analytics python -m tmdb_ingestion.jobs.discover_movies --start-year 2026 --end-year 2026
 	$(DC) exec tmdb-analytics python -m tmdb_ingestion.jobs.fetch_movie_details
 
 ingest-seeds:
@@ -84,6 +100,31 @@ ingest-seeds:
 	$(DC) exec tmdb-analytics python -m tmdb_ingestion.jobs.update_seeds
 
 # dbt Commands
+SEL ?=
+EXC ?=
+DBT_TARGET ?=
+DBT_VARS ?=
+
+dbt-run:
+	@echo "Running dbt transformations..."
+	$(DC) exec tmdb-analytics bash -c 'cd dbt && dbt run \
+		$(if $(DBT_TARGET),--target $(DBT_TARGET),) \
+		$(if $(SEL),--select "$(SEL)",) \
+		$(if $(EXC),--exclude "$(EXC)",) \
+		$(if $(DBT_VARS),--vars "$(DBT_VARS)",)'
+
+dbt-run-staging:
+	@echo "Running dbt staging models..."
+	$(DC) exec tmdb-analytics bash -c 'cd dbt && dbt run --select "path:models/staging"'
+
+dbt-run-intermediate:
+	@echo "Running dbt intermediate models..."
+	$(DC) exec tmdb-analytics bash -c 'cd dbt && dbt run --select "path:models/intermediate"'
+
+dbt-run-marts:
+	@echo "Running dbt marts models..."
+	$(DC) exec tmdb-analytics bash -c 'cd dbt && dbt run --select "path:models/marts"'
+	
 dbt-deps:
 	@echo "Installing dbt packages..."
 	$(DC) exec tmdb-analytics bash -c "cd dbt && dbt deps"
@@ -92,13 +133,14 @@ dbt-seed:
 	@echo "Loading reference data..."
 	$(DC) exec tmdb-analytics bash -c "cd dbt && dbt seed"
 
-dbt-run:
-	@echo "Running dbt transformations..."
-	$(DC) exec tmdb-analytics bash -c "cd dbt && dbt run"
-
 dbt-test:
 	@echo "Running dbt tests..."
-	$(DC) exec tmdb-analytics bash -c "cd dbt && dbt test"
+	@echo "SEL='$(SEL)' EXC='$(EXC)' DBT_TARGET='$(DBT_TARGET)'"
+	$(DC) exec tmdb-analytics bash -lc 'cd dbt && dbt test \
+		$(if $(DBT_TARGET),--target $(DBT_TARGET),) \
+		$(if $(SEL),--select "$(SEL)",) \
+		$(if $(EXC),--exclude "$(EXC)",) \
+		$(if $(DBT_VARS),--vars "$(DBT_VARS)",)'
 
 dbt-docs:
 	@echo "Generating and serving dbt docs..."

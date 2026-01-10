@@ -1,6 +1,6 @@
 # Docker Setup for TMDB Analytics
 
-This guide shows you how to run the TMDB Analytics project using Docker, which simplifies setup by handling all dependencies automatically.
+This guide provides detailed Docker setup instructions for the TMDB Analytics project. For a quick start, see the [README.md](README.md) which uses the recommended Makefile workflow. The default ingestion configuration is cloud-first (GCS + BigQuery); you can switch to local storage for local development.
 
 ## Prerequisites
 
@@ -8,7 +8,37 @@ This guide shows you how to run the TMDB Analytics project using Docker, which s
 - [Docker Compose](https://docs.docker.com/compose/install/) (included with Docker Desktop)
 - A TMDB API key ([get one here](https://www.themoviedb.org/settings/api))
 
-## Quick Start
+## Recommended: Using Makefile (Quick Start, Cloud-First)
+
+The easiest way to get started is using the Makefile, which wraps all Docker commands:
+
+```bash
+# Clone and setup
+git clone https://github.com/jacobjeffrey/tmdb-analytics.git
+cd tmdb-analytics
+cp .env.example .env
+# Edit .env with your TMDB API key and GCP settings
+
+# First-time setup
+make init      # Builds container and starts services
+
+# Run the complete pipeline (BigQuery)
+make pipeline  # Runs ingestion + dbt transformations
+
+# View documentation
+make dbt-docs  # Available at http://localhost:8080
+
+# See all available commands
+make help
+```
+
+See the [README.md](README.md) for the full quick start guide.
+
+---
+
+## Alternative: Direct Docker Compose Commands
+
+If you prefer using `docker compose` directly instead of the Makefile:
 
 **1. Clone the repository**
 ```bash
@@ -56,11 +86,46 @@ dbt docs generate
 dbt docs serve --host 0.0.0.0
 ```
 
+**Optional: confirm ingestion uses GCS (default)**
+
+By default, ingestion writes to GCS. To verify or update, edit `tmdb_ingestion/config.yml`:
+```yaml
+filesystem:
+  backend: "gcs"
+  gcs:
+    bucket: "your-bucket-name"
+    prefix: "tmdb_ingestion"
+    auth:
+      method: "adc"  # or "service_account" for production
+```
+When using `auth.method: "adc"`, authenticate locally with:
+```bash
+gcloud auth application-default login
+```
+To switch to local storage, set `filesystem.backend: "local"` and keep the `local` paths below.
+
+**Local Development (DuckDB)**
+
+For local development, switch the filesystem backend and run dbt against DuckDB:
+```yaml
+# tmdb_ingestion/config.yml
+filesystem:
+  backend: "local"
+  local:
+    data_dir: "data"
+    seeds_dir: "dbt/seeds"
+```
+
+```bash
+export DBT_TARGET=dev_duckdb
+make pipeline
+```
+
 **6. View dbt docs in your browser**
 
 Open http://localhost:8080 to see the dbt documentation.
 
-## Common Commands
+## Common Docker Compose Commands
 
 ```bash
 # Start the container
@@ -87,7 +152,7 @@ docker compose run --rm tmdb-analytics python -m tmdb_ingestion.jobs.discover_mo
 The `data/` directory is mounted as a volume, so your data persists even when you stop/remove containers:
 - `data/*.parquet` - Raw API data
 - `data/tmdb_analytics.db` - DuckDB database
-- `data/seeds/*.csv` - Reference data
+- `dbt/seeds/*.csv` - Reference data
 
 ## Development Workflow
 
@@ -100,7 +165,8 @@ The Docker setup mounts your local code directories, so you can:
 docker compose up
 
 # In another terminal: make changes, then test
-docker compose exec tmdb-analytics python -m tmdb_ingestion.jobs.discover_movies --start-year 2024 --end-year 2024
+docker compose exec tmdb-analytics python -m tmdb_ingestion.jobs.discover_movies --start-year 2026 --end-year 2026
+
 ```
 
 ## Troubleshooting
@@ -123,11 +189,9 @@ sudo chown -R $USER:$USER data/
 ```
 
 **Port 8080 already in use:**
-Edit `docker compose.yml` and change the port mapping:
-```yaml
-ports:
-  - "8081:8080"  # Use 8081 on your host instead
-```
+The dbt docs server runs inside the container and is exposed on port 8080. If you need to change the port, you can:
+- Update the port mapping in `docker-compose.yml`
+- Or manually expose a different port when running `dbt docs serve` inside the container
 
 ## Alternative: Using Dockerfile Only
 
@@ -135,7 +199,7 @@ If you prefer not to use Docker Compose:
 
 ```bash
 # Build the image
-docker build -t tmdb-analytics .
+docker build -f Dockerfile.dev -t tmdb-analytics:dev .
 
 # Run the container
 docker run -it \

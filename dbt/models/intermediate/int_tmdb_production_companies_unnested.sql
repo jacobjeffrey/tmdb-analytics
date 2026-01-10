@@ -1,22 +1,23 @@
 -- int_tmdb_production_companies_unnested
+
 with src as (
-    select 
-        movie_id, 
-        production_companies, 
+    select
+        movie_id,
+        production_companies,
         ingested_at
-    from {{ ref('stg_tmdb__movies')}}
+    from {{ ref('stg_tmdb__movies') }}
 ),
 
 exploded as (
     select
-        movie_id,
-        pc.id as company_id,
-        pc.name as company_name,
-        pc.origin_country,
-        pc.logo_path,
-        ingested_at
-    from src,
-    unnest(production_companies) as t(pc)
+        s.movie_id,
+        pc.element.id            as company_id,
+        pc.element.name          as company_name,
+        pc.element.origin_country as origin_country,
+        pc.element.logo_path     as logo_path,
+        s.ingested_at
+    from src as s
+    cross join unnest(ifnull(s.production_companies.list, [])) as pc
 ),
 
 deduped as (
@@ -24,7 +25,7 @@ deduped as (
     from exploded
     qualify row_number() over (
         partition by movie_id, company_id
-        order by ingested_at
+        order by ingested_at desc
     ) = 1
 )
 
@@ -33,8 +34,9 @@ select
     company_id,
     company_name,
     case
-      when origin_country in ('', ' ') then null
-      else upper(left(origin_country, 2))
+      when origin_country is null then null
+      when trim(origin_country) = '' then null
+      else upper(substr(origin_country, 1, 2))
     end as origin_country,
     logo_path
 from deduped

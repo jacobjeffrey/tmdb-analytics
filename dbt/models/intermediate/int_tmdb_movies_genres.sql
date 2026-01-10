@@ -1,19 +1,19 @@
 --int_tmdb_movies_genres.sql
 
 with base as (
-    select 
+    select
         movie_id,
         genres
-    from {{ ref('stg_tmdb__movies')  }}
+    from {{ ref('stg_tmdb__movies') }}
 ),
 
 unnested as (
     select
-        movie_id,
-        g.id as genre_id,
-        g.name as genre_name
-    from base,
-    unnest(genres) as t(g)
+        b.movie_id,
+        g.element.id as genre_id,
+        g.element.name as genre_name
+    from base as b
+    cross join unnest(ifnull(b.genres.list, [])) as g
 )
 
 select
