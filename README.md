@@ -215,6 +215,10 @@ filesystem:
     auth:
       method: "oauth"  # or "service_account" for production
 ```
+When using `auth.method: "adc"`, authenticate locally with:
+```bash
+gcloud auth application-default login
+```
 If you want to switch to local storage, set `filesystem.backend: "local"` and keep the `local` paths below.
 
 4. **Run the pipeline:**
@@ -289,9 +293,9 @@ Example profile:
 
 ```yaml
 tmdb_analytics:
-  target: dev
+  target: dev_duckdb
   outputs:
-    dev:
+    dev_duckdb:
       type: duckdb
       path: "{{ env_var('DUCKDB_PATH', 'data/tmdb_analytics.db') }}"
       threads: 4
@@ -307,9 +311,9 @@ python -m tmdb_ingestion.ingest_tmdb
 
 cd dbt
 dbt deps
-dbt seed
-dbt run
-dbt test
+dbt seed --target dev_duckdb
+dbt run --target dev_duckdb
+dbt test --target dev_duckdb
 
 dbt docs generate
 dbt docs serve

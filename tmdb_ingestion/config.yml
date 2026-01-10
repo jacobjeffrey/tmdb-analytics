@@ -73,6 +73,7 @@ filesystem:
     project: null
     # Authentication strategy.
     # - "adc": Application Default Credentials (recommended)
+    #   Run `gcloud auth application-default login` for local development.
     # - "service_account": load from a key file
     auth:
       method: "adc"

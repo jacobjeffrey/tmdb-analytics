@@ -96,7 +96,11 @@ filesystem:
     bucket: "your-bucket-name"
     prefix: "tmdb_ingestion"
     auth:
-      method: "oauth"  # or "service_account" for production
+      method: "adc"  # or "service_account" for production
+```
+When using `auth.method: "adc"`, authenticate locally with:
+```bash
+gcloud auth application-default login
 ```
 To switch to local storage, set `filesystem.backend: "local"` and keep the `local` paths below.
 
