@@ -5,11 +5,14 @@ models:
     description: Quartile thresholds for reported TMDB budgets >= 1000.
     tests:
       - dbt_utils.expression_is_true:
-          expression: "q1_budget_usd >= 1000"
+          arguments:
+            expression: "q1_budget_usd >= 1000"
       - dbt_utils.expression_is_true:
-          expression: "q3_budget_usd > q1_budget_usd"
+          arguments:
+            expression: "q3_budget_usd > q1_budget_usd"
       - dbt_utils.expression_is_true:
-          expression: "n_budgets_used > 0"
+          arguments:
+            expression: "n_budgets_used > 0"
     columns:
       - name: q1_budget_usd
         description: 25th percentile of usable budgets in USD.
@@ -30,12 +33,14 @@ models:
         description: Normalized budget in USD (zero values converted to null).
         tests:
           - dbt_utils.expression_is_true:
-              expression: "budget_usd is null or budget_usd >= 0"
+              arguments:
+                expression: "budget_usd is null or budget_usd >= 0"
       - name: revenue_usd
         description: Normalized revenue in USD (zero values converted to null).
         tests:
           - dbt_utils.expression_is_true:
-              expression: "revenue_usd is null or revenue_usd >= 0"
+              arguments:
+                expression: "revenue_usd is null or revenue_usd >= 0"
       - name: budget_quality
         description: Quality flag for the budget field.
         tests:
