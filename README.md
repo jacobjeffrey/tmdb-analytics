@@ -60,13 +60,13 @@ Parquet files are read directly by dbt via DuckDB's native Parquet support (loca
 
 **2. Data Transformation (dbt)**
 
-**Staging layer** - Clean and standardize raw data from the movie_details_and_credits Parquet file (rename fields, fix data types, handle nulls). Three staging models extract different aspects of the mega-file: movie data, cast credits, and crew credits.
+**Staging layer** - Clean and standardize raw data from the movie_details_and_credits Parquet file (rename fields, fix data types, handle nulls). Three staging models extract different aspects of the mega-file: movie data, cast credits, and crew credits. TMDB encodes missing budget and revenue as `0`, so the staging layer normalizes `0 -> NULL`, flags `budget_quality`, and treats budgets under $1,000 as unreliable placeholders.
 
 **Intermediate layer** - Unnest JSON arrays and deduplicate entities (people, production companies, etc.). Cast and crew are combined into a unified credits structure here.
 
 **Marts layer** - Build analytics-ready models:
 - **Dimensions**: movies, people, genres, countries, languages, companies
-- **Facts**: `fct_movies` (performance metrics: revenue, budget, ratings), `fct_credits` (cast and crew assignments with role details)
+- **Facts**: `fct_movies` (performance metrics: normalized revenue/budget, ratings), `fct_credits` (cast and crew assignments with role details)
 - **Bridge tables**: many-to-many relationships for genres, origin countries, and production companies
 
 Bridge tables normalize fields that are frequently filtered or aggregated (genres, countries). Credits became a fact table since it captures events (who worked on what movie in what role) rather than just relationships.
@@ -93,6 +93,7 @@ I chose star schema because it's the gold standard for analytics, simplying the 
 - **Unnested production companies from movie details** - TMDB's production_company endpoint was redundant with data already in movie_details, so I extracted and deduped companies directly from the nested JSON arrays in the intermediate layer
 - **JSON for spoken_languages, production_countries, and belongs_to_collection** - Kept these as JSON in `dim_movies` rather than creating another bridge table since I don't have an analytics use-case for them yet. Avoided unnesting to keep the mart small.
 - **Popularity as a snapshot** - Currently stored in `dim_people` as a point-in-time value. Might move to a dedicated fct_popularity table if I decide to track historical trends.
+- **Budget quality and tiers** - Budget quartiles (and tiers) are computed only on reported budgets >= $1,000, and downstream metrics should report coverage for budget/revenue to avoid over-interpreting missing or unreliable values.
 
 **Key models:**
 
@@ -102,7 +103,7 @@ I chose star schema because it's the gold standard for analytics, simplying the 
 - `dim_genres`, `dim_languages`, `dim_countries`, `dim_production_companies` - Reference data
 
 **Facts:**
-- `fct_movies` - Movie performance metrics: revenue, budget, vote counts. One row per movie.
+- `fct_movies` - Movie performance metrics: normalized revenue/budget, vote counts. One row per movie.
 - `fct_credits` - Cast and crew assignments with role details (character, job title, department, cast order). One row per unique credit.
 
 **Bridges:**

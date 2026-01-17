@@ -47,18 +47,36 @@ models:
         description: True if the record refers to a video release.
 
       - name: revenue
-        description: Reported total revenue in USD.
+        description: Raw TMDB revenue in USD (0 indicates missing).
         tests:
           - dbt_expectations.expect_column_values_to_be_between:
               arguments:
                 min_value: 0
               
       - name: budget
-        description: Reported production budget in USD.
+        description: Raw TMDB production budget in USD (0 indicates missing).
         tests:
           - dbt_expectations.expect_column_values_to_be_between:
               arguments:
                 min_value: 0
+
+      - name: revenue_usd
+        description: Revenue in USD with TMDB zero values normalized to null.
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: "revenue_usd is null or revenue_usd >= 0"
+
+      - name: budget_usd
+        description: Budget in USD with TMDB zero values normalized to null.
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: "budget_usd is null or budget_usd >= 0"
+
+      - name: budget_quality
+        description: Flag describing whether budget is missing, unreliable, or reported.
+        tests:
+          - accepted_values:
+              values: ['missing', 'unreliable_low', 'reported']
 
       - name: runtime
         description: Movie runtime in minutes.

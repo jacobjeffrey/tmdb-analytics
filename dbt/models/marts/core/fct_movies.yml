@@ -16,19 +16,30 @@ models:
                 to: ref('dim_movies')
                 field: movie_id
 
-      - name: revenue
-        description: The revenue in USD, not adjusted for inflation
+      - name: revenue_usd
+        description: The revenue in USD, not adjusted for inflation, with TMDB zero values normalized to null.
         tests:
-          - dbt_expectations.expect_column_values_to_be_between:
-              arguments:
-                min_value: 0
+          - dbt_utils.expression_is_true:
+              expression: "revenue_usd is null or revenue_usd >= 0"
 
-      - name: budget
-        description: The revenue in USD, not adjusted for inflation
+      - name: budget_usd
+        description: The budget in USD, not adjusted for inflation, with TMDB zero values normalized to null.
         tests:
-          - dbt_expectations.expect_column_values_to_be_between:
-              arguments:
-                min_value: 0
+          - dbt_utils.expression_is_true:
+              expression: "budget_usd is null or budget_usd >= 0"
+
+      - name: budget_quality
+        description: Quality flag for budget reporting.
+        tests:
+          - accepted_values:
+              values: ['missing', 'unreliable_low', 'reported']
+
+      - name: budget_tier
+        description: Budget tier derived from reported quartiles.
+        tests:
+          - accepted_values:
+              values: ['low', 'mid', 'high']
+              where: "budget_tier is not null"
 
       - name: runtime
         description: The movie runtime in minutes
