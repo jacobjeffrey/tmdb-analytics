@@ -34,13 +34,13 @@ models:
         tests:
           - dbt_utils.expression_is_true:
               arguments:
-                expression: "budget_usd is null or budget_usd >= 0"
+                expression: "is null or budget_usd >= 0"
       - name: revenue_usd
         description: Normalized revenue in USD (zero values converted to null).
         tests:
           - dbt_utils.expression_is_true:
               arguments:
-                expression: "revenue_usd is null or revenue_usd >= 0"
+                expression: "is null or revenue_usd >= 0"
       - name: budget_quality
         description: Quality flag for the budget field.
         tests:
