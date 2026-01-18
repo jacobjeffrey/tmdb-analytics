@@ -1,0 +1,54 @@
+version: 2
+
+models:
+  - name: int_tmdb__budget_thresholds
+    description: Quartile thresholds for reported TMDB budgets >= 1000.
+    tests:
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "q1_budget_usd >= 1000"
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "q3_budget_usd > q1_budget_usd"
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "n_budgets_used > 0"
+    columns:
+      - name: q1_budget_usd
+        description: 25th percentile of usable budgets in USD.
+      - name: q3_budget_usd
+        description: 75th percentile of usable budgets in USD.
+      - name: n_budgets_used
+        description: Count of usable budgets used to compute quartiles.
+
+  - name: int_tmdb__movies_financials
+    description: Enriched movie-level financial metrics with normalized budgets and tiers.
+    columns:
+      - name: movie_id
+        description: Unique TMDB movie identifier.
+        tests:
+          - not_null
+          - unique
+      - name: budget_usd
+        description: Normalized budget in USD (zero values converted to null).
+        tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: "is null or budget_usd >= 0"
+      - name: revenue_usd
+        description: Normalized revenue in USD (zero values converted to null).
+        tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: "is null or revenue_usd >= 0"
+      - name: budget_quality
+        description: Quality flag for the budget field.
+        tests:
+          - accepted_values:
+              values: ['missing', 'unreliable_low', 'reported']
+      - name: budget_tier
+        description: Budget tier derived from reported quartiles.
+        tests:
+          - accepted_values:
+              values: ['low', 'mid', 'high']
+              where: "budget_tier is not null"
