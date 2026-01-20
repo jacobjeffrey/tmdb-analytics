@@ -1,0 +1,14 @@
+# presentation.yml
+
+version: 2
+
+models:
+  - name: top_roi_movies_by_budget_tier_last_5y
+    description: Top 5 ROI movies per budget tier released in the last 5 years.
+    columns:
+      - name: roi
+        description: Revenue divided by budget.
+        tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: "is not null or budget_usd is null"
