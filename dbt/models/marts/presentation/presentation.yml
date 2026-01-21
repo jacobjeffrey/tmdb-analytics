@@ -12,8 +12,8 @@ models:
           - dbt_utils.expression_is_true:
               arguments:
                 expression: "is not null or budget_usd is null"
-  - name: rpt_genre_count_2020_2025
-    description: Movie counts per genre for releases from 2020 to 2025.
+  - name: agg_genre_movie_count_daily
+    description: Movie counts per genre aggregated daily.
     columns:
       - name: release_year
         description: Release year for aggregation.
@@ -21,5 +21,5 @@ models:
         description: Genre identifier.
       - name: genre_name
         description: Genre name.
-      - name: movie_count_last_5y
+      - name: movie_count
         description: Distinct movies released in release_year that are tagged with this genre. A movie may appear in multiple genres.

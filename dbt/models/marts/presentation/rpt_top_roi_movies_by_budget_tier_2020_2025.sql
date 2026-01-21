@@ -8,7 +8,7 @@ with movies as (
     fct.budget_usd,
     fct.budget_quality,
     fct.budget_tier,
-    safe_divide(fct.revenue_usd, fct.budget_usd) as roi
+    fct.revenue_usd/nullif(fct.budget_usd, 0) as roi
   from {{ ref('fct_movies') }} as fct
   join {{ ref('dim_movies') }} as dim
     on fct.movie_id = dim.movie_id

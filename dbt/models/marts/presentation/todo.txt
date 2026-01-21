@@ -1,0 +1,37 @@
+Page 1: Structural Performance (2020–2025)
+
+Goal: stable insights; avoid noisy “top lists” dominating.
+
+Top row (context KPIs)
+
+Total films (count)
+
+% with reported budget
+
+% with reported revenue
+
+Median ROI (overall)
+
+Budget-tier mix (low/mid/high %)
+
+Row 2 (the big story visuals)
+
+Budget-tier mix over time (stacked area or 100% stacked bar by year)
+
+Original language share over time (top 5 languages + “Other”)
+
+Row 3 (efficiency / outcomes)
+
+Median ROI by budget tier over time (line chart; median, not mean)
+
+Genre efficiency: genre vs median ROI (table + sparkline by year, or bar chart with a year filter)
+
+Row 4 (drilldown)
+
+“Top ROI films per budget tier” as three small tables (low/mid/high), 3–5 rows each
+
+Title, release year, budget, revenue, ROI, language, genres
+
+This avoids the Looker bar-chart spacing/ranking hell entirely.
+
+If you keep Looker Studio: lean into tables + lines + stacked bars. Avoid “breakdown by title” bar charts.
