@@ -49,7 +49,7 @@ select
         when safe_cast(p.budget as int64) < 1000 then 'unreliable_low'
         else 'reported'
     end as budget_quality,
-    safe_cast(p.runtime as int64) as runtime,
+    nullif(safe_cast(p.runtime as int64), 0) as runtime,
     safe_cast(p.popularity as float64) as popularity,
     safe_cast(p.vote_average as float64) as vote_average,
     safe_cast(p.vote_count as int64) as vote_count,

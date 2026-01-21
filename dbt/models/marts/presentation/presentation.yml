@@ -3,8 +3,8 @@
 version: 2
 
 models:
-  - name: rpt_top_roi_movies_by_budget_tier_last_5y
-    description: Top 5 ROI movies per budget tier released in the last 5 years.
+  - name: rpt_top_roi_movies_by_budget_tier_2020_2025
+    description: Top 5 ROI movies per budget tier released from 2020 to 2025.
     columns:
       - name: roi
         description: Revenue divided by budget.
@@ -12,8 +12,8 @@ models:
           - dbt_utils.expression_is_true:
               arguments:
                 expression: "is not null or budget_usd is null"
-  - name: rpt_genre_count_last_5y
-    description: Movie counts per genre for releases in the last 5 years.
+  - name: rpt_genre_count_2020_2025
+    description: Movie counts per genre for releases from 2020 to 2025.
     columns:
       - name: release_year
         description: Release year for aggregation.
@@ -22,4 +22,4 @@ models:
       - name: genre_name
         description: Genre name.
       - name: movie_count_last_5y
-        description: Count of distinct movies released in the last 5 years.
+        description: Distinct movies released in release_year that are tagged with this genre. A movie may appear in multiple genres.

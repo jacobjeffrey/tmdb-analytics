@@ -1,4 +1,4 @@
--- rpt_top_roi_movies_by_budget_tier_last_5y.sql
+-- rpt_top_roi_movies_by_budget_tier_2020_to_2025.sql
 with movies as (
   select
     fct.movie_id,
@@ -18,7 +18,8 @@ with movies as (
 select
   *
 from movies
-where release_date >= date_sub(current_date, interval 5 year)
+where release_date >= date '2020-01-01'
+  and release_date < date '2026-01-01'
 qualify row_number() over (
   partition by budget_tier
   order by roi desc

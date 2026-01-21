@@ -1,10 +1,11 @@
--- genre_count_last_5y.sql
+-- genre_count_2020_to_2025.sql
 with recent_movies as (
   select
     movie_id,
     extract(year from release_date) as release_year
   from {{ ref('dim_movies') }}
-  where release_date >= date_sub(current_date, interval 5 year)
+  where release_date >= date '2020-01-01'
+    and release_date < date '2026-01-01'
 ),
 
 movies_by_genre as (
