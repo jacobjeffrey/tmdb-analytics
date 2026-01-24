@@ -21,7 +21,7 @@ These queries become straightforward because the project uses:
 
 **What's working:** Core pipeline complete - Asynchronous API ingestion, dbt transformations with 18 models, dimensional modeling with bridge tables, comprehensive data quality tests. Ingestion refactored to be more modular and ready for the cloud (i.e. easily configurable for different environments). Containerization with Docker. **GCP deployment ready** – BigQuery-compatible dbt models and Terraform-provisioned GCP infrastructure (GCS, BigQuery, IAM). Orchestration coming next. Pipeline supports both cloud (BigQuery) and local (DuckDB) execution.
 
-**What I'm working on:** Front-end (leaning towards Streamlit)
+**What I'm working on:** Expanding Looker Studio reports and coverage metrics
 
 **What's next:** Cloud orchestration (Cloud Run/Cloud Functions)
 
@@ -33,7 +33,7 @@ These queries become straightforward because the project uses:
 - **Transformation:** dbt core (DuckDB and BigQuery adapters)
 - **Infrastructure:** Terraform (GCP resources)
 - **Containerization:** Docker (dev and prod images)
-- **Frontend:** (tentative) 
+- **Frontend:** Looker Studio dashboard: https://lookerstudio.google.com/reporting/53f4e136-797d-4a7d-99a3-98a912bfb2ef
 
 
 ## How It Works
@@ -65,17 +65,20 @@ Parquet files are read directly by dbt via DuckDB's native Parquet support (loca
 **Intermediate layer** - Unnest JSON arrays and deduplicate entities (people, production companies, etc.). Cast and crew are combined into a unified credits structure here.
 
 **Marts layer** - Build analytics-ready models:
-- **Dimensions**: movies, people, genres, countries, languages, companies
+- **Dimensions**: movies, people, genres, countries, languages, companies, date
 - **Facts**: `fct_movies` (performance metrics: normalized revenue/budget, ratings), `fct_credits` (cast and crew assignments with role details)
 - **Bridge tables**: many-to-many relationships for genres, origin countries, and production companies
+- **Presentation/reporting**: preaggregations and reports (e.g., ROI, genre counts) to simplify BI tooling
 
 Bridge tables normalize fields that are frequently filtered or aggregated (genres, countries). Credits became a fact table since it captures events (who worked on what movie in what role) rather than just relationships.
 
 Every model has tests: primary key uniqueness, not-null constraints, referential integrity checks.
 
-**3. Analytics Frontend (Tentative)**
+**3. Analytics Frontend**
 
-Building interactive dashboards to explore trends like ROI by genre, actor career earnings, and budget evolution over time.
+Looker Studio dashboard: https://lookerstudio.google.com/reporting/53f4e136-797d-4a7d-99a3-98a912bfb2ef
+
+Includes a page showing genre, language, and ROI trends for 2020-2025, plus supporting report tables pre-aggregated in the mart layer.
 
 ## Data Models
 
@@ -94,6 +97,8 @@ I chose star schema because it's the gold standard for analytics, simplying the 
 - **JSON for spoken_languages, production_countries, and belongs_to_collection** - Kept these as JSON in `dim_movies` rather than creating another bridge table since I don't have an analytics use-case for them yet. Avoided unnesting to keep the mart small.
 - **Popularity as a snapshot** - Currently stored in `dim_people` as a point-in-time value. Might move to a dedicated fct_popularity table if I decide to track historical trends.
 - **Budget quality and tiers** - Budget quartiles (and tiers) are computed only on reported budgets >= $1,000, and downstream metrics should report coverage for budget/revenue to avoid over-interpreting missing or unreliable values.
+- **Date dimension** - A dedicated `dim_date` supports consistent calendar filters across reports.
+- **Preaggregated reports** - Report-ready marts reduce complex Looker Studio blending for common KPIs.
 
 **Key models:**
 
@@ -101,6 +106,7 @@ I chose star schema because it's the gold standard for analytics, simplying the 
 - `dim_movies` - Core movie info: title, release date, description, tagline
 - `dim_people` - Cast and crew name, biography, popularity
 - `dim_genres`, `dim_languages`, `dim_countries`, `dim_production_companies` - Reference data
+- `dim_date` - Calendar spine with year/quarter/month/week attributes
 
 **Facts:**
 - `fct_movies` - Movie performance metrics: normalized revenue/budget, vote counts. One row per movie.
@@ -111,8 +117,13 @@ I chose star schema because it's the gold standard for analytics, simplying the 
 - `bridge_movies_origin_countries` - Movies ↔ Origin Countries (many-to-many)
 - `bridge_movies_prod_companies` - Movies ↔ Production Companies (many-to-many)
 
+**Presentation/Reports:**
+- `rpt_movies_base` - Core movie reporting grain with ROI and budget tiers
+- `rpt_genre_median_roi_yearly` - Median ROI by genre and year
+- `agg_genre_movie_count_daily` - Daily genre release counts
+
 <p align="center">
-  <img src="docs/images/dbt-dag.png" width="700" alt="dbt lineage graph">
+  <img src="docs/images/dbt-dag.png" width="1000" alt="dbt lineage graph">
 </p>
 
 ## Getting Started
@@ -380,6 +391,8 @@ dbt docs serve
 - **BigQuery migration required SQL dialect changes** - Refactored all dbt models from DuckDB to BigQuery syntax (e.g., `UNNEST` in FROM clause, `STRUCT` types, `ARRAY_AGG`). The staging layer uses BigQuery-native functions while maintaining compatibility with the same data model structure.
 
 - **Terraform for infrastructure** - Provisioning GCP resources (GCS, BigQuery, IAM) as code eliminated manual setup and ensures consistent environments. The config-driven ingestion pipeline seamlessly switches between local and GCS backends based on configuration.
+
+- **Preaggregating reports saves BI pain** - Building report-level tables and metrics in the mart layer avoids complex blending in Looker Studio.
 
 
 ## Running This Yourself

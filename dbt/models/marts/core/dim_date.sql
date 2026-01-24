@@ -1,12 +1,23 @@
 -- marts/core/dim_date.sql
 
-with spine as (
+with bounds as (
+  select
+    coalesce(min(release_date), date '1970-01-01') as min_date,
+    greatest(
+      coalesce(max(release_date), current_date()),
+      date_add(current_date(), interval 1 year)
+    ) as max_date
+  from {{ ref('dim_movies') }}
+),
+
+spine as (
   select
     d as date_day
-  from unnest(
+  from bounds
+  cross join unnest(
     generate_date_array(
-      date '1970-01-01',
-      date_add(current_date(), interval 1 year)
+      bounds.min_date,
+      bounds.max_date
     )
   ) as d
 ),

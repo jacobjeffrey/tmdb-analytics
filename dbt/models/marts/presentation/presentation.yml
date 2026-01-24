@@ -3,15 +3,6 @@
 version: 2
 
 models:
-  - name: rpt_top_roi_movies_by_budget_tier_2020_2025
-    description: Top 5 ROI movies per budget tier released from 2020 to 2025.
-    columns:
-      - name: roi
-        description: Revenue divided by budget.
-        tests:
-          - dbt_utils.expression_is_true:
-              arguments:
-                expression: "is not null or budget_usd is null"
   - name: agg_genre_movie_count_daily
     description: Movie counts per genre aggregated daily.
     columns:

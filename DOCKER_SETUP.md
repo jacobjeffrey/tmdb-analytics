@@ -2,6 +2,8 @@
 
 This guide provides detailed Docker setup instructions for the TMDB Analytics project. For a quick start, see the [README.md](README.md) which uses the recommended Makefile workflow. The default ingestion configuration is cloud-first (GCS + BigQuery); you can switch to local storage for local development.
 
+Frontend note: the analytics dashboard now lives in Looker Studio (no local frontend container needed). Link: https://lookerstudio.google.com/reporting/53f4e136-797d-4a7d-99a3-98a912bfb2ef
+
 ## Prerequisites
 
 - [Docker](https://docs.docker.com/get-docker/)
