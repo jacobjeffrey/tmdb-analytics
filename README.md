@@ -19,7 +19,7 @@ These queries become straightforward because the project uses:
 - Data quality tests that catch common TMDB API issues such as missing people records or duplicated fields
 ## Current Status
 
-**What's working:** Core pipeline complete - Asynchronous API ingestion, dbt transformations with 18 models, dimensional modeling with bridge tables, comprehensive data quality tests. Ingestion refactored to be more modular and ready for the cloud (i.e. easily configurable for different environments). Containerization with Docker. **GCP deployment ready** – BigQuery-compatible dbt models and Terraform-provisioned GCP infrastructure (GCS, BigQuery, IAM). Orchestration coming next. Pipeline supports both cloud (BigQuery) and local (DuckDB) execution.
+**What's working:** Core pipeline complete - Asynchronous API ingestion, dbt transformations with 24 models, dimensional modeling with bridge tables, comprehensive data quality tests. Ingestion refactored to be more modular and ready for the cloud (i.e. easily configurable for different environments). Containerization with Docker. **GCP deployment ready** – BigQuery-compatible dbt models and Terraform-provisioned GCP infrastructure (GCS, BigQuery, IAM). Orchestration coming next. Pipeline supports both cloud (BigQuery) and local (DuckDB) execution.
 
 **What I'm working on:** Expanding Looker Studio reports and coverage metrics
 
