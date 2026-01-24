@@ -1,0 +1,9 @@
+# marts/core/dim_date.yml
+
+models:
+  - name: dim_date
+    columns:
+      - name: date_day
+        tests:
+          - unique
+          - not_null

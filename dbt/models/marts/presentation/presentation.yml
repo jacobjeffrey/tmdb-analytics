@@ -1,0 +1,16 @@
+# presentation.yml
+
+version: 2
+
+models:
+  - name: agg_genre_movie_count_daily
+    description: Movie counts per genre aggregated daily.
+    columns:
+      - name: release_date
+        description: Release date for aggregation.
+      - name: genre_id
+        description: Genre identifier.
+      - name: genre_name
+        description: Genre name.
+      - name: movie_count
+        description: Distinct movies released on release_date that are tagged with this genre. A movie may appear in multiple genres.
